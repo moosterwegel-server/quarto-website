@@ -4,7 +4,7 @@
     "href": "index.html",
     "title": "Max Oosterwegel -- blog ( ._.)",
     "section": "",
-    "text": "Year\n\n\nTitle\n\n\nMonth & Day\n\n\n\n\n\n\n2025\n\n\nThe advantages of conditional logistic regression in (metabol)omic matched case-control studies\n\n\nMay 5\n\n\n\n\n\n\nImputing nondetects and removing technical variation in left-censored metabolomic data\n\n\nApril 28\n\n\n\n\n\n\nA guide to fitting left-censored models with R\n\n\nApril 21\n\n\n\n\nNo matching items"
+    "text": "Year\n\n\nTitle\n\n\nMonth & Day\n\n\n\n\n\n\n2025\n\n\nNo, simply reducing the number of tests won’t increase your power when you control the FDR\n\n\nJuly 12\n\n\n\n\n\n\nThe advantages of conditional logistic regression in (metabol)omic matched case-control studies\n\n\nMay 5\n\n\n\n\n\n\nImputing nondetects and removing technical variation in left-censored metabolomic data\n\n\nApril 28\n\n\n\n\n\n\nA guide to fitting left-censored models with R\n\n\nApril 21\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "blog/left-censored-models-showcase/index.html",
@@ -33,6 +33,27 @@
     "title": "A guide to fitting left-censored models with R",
     "section": "Footnotes",
     "text": "Footnotes\n\n\nNot to be confused with left truncation. In both truncation and censoring no information on the value of the observation beyond the truncation/censoring point is available. However, with censoring we know the number of observations beyond this point contrary to truncation where we do not observe any of the dependent variable or covariates – the entry is simply missing from your data table. See for example Senn, Holford, and Hockey (2012) and Andrew Gelman et al. (2013), p.224 for a more in depth explanation on the statistical connections between truncation and censoring.↩︎\nWhile I have not encountered it myself, I have read that (some) mass spectrometry instruments can also reach saturation. This will not be the topic of this post. I think though that saturation would introduce an additional right censoring mechanism or some type of non-linear effect – again not sure how this gets handled in practice.↩︎\nIn this post we assume the limit of detection is known, but this need not always be the case. See for example Andrew Gelman et al. (2013), p.226 on how to handle this.↩︎\nThe classical tobit model from economics assumes a normal distribution for outcome variable with left-censoring at 0.↩︎\nVia A. Gelman and Hill (2006) and Michael Clark his post.↩︎\nThough there seem to be some questions on if {censReg} is doing it correctly (per the author of the {GLMMadaptive} package).↩︎\nUnfortunately no censored predictors yet.↩︎\nNot entirely sure if the random effects also follow a lognormal distribution here. My simulations (not shown) suggest a lognormal normal distribution so this would be different from log transforming the outcome and using our {brms} model.↩︎\nSee for example https://becarioprecario.bitbucket.io/inla-gitbook/ch-survival.html and https://www.paulamoraga.com/book-geospatial/sec-inla.html for more information on how to work with {INLA}.↩︎\nWe are probably overconfident in statistical software and do not evaluate them sufficiently before using them in our work. See this post from Alex Hayes for some thoughts on checking statistical software.↩︎"
+  },
+  {
+    "objectID": "blog/fdr-heuristics/index.html",
+    "href": "blog/fdr-heuristics/index.html",
+    "title": "No, simply reducing the number of tests won’t increase your power when you control the FDR",
+    "section": "",
+    "text": "During my PhD, I have noticed that many people (and chatbots) apply a Bonferroni type of thinking to all multiple testing ‘problems’1. More tests inherently means much less power – the thinking goes. However, this heuristic is not useful for methods that control the false discovery rate (FDR) such as the Benjamin-Hochberg (BH) procedure. In this blog post, I will briefly show why this Bonferroni heuristic fails here and what a better heuristic of statistical power is in situations where you aim to control the FDR."
+  },
+  {
+    "objectID": "blog/fdr-heuristics/index.html#footnotes",
+    "href": "blog/fdr-heuristics/index.html#footnotes",
+    "title": "No, simply reducing the number of tests won’t increase your power when you control the FDR",
+    "section": "Footnotes",
+    "text": "Footnotes\n\n\nI very much like the framing from Wolfgang Huber on the false discovery rate: not as a problem but as an opportunity to get an answer to a more interesting question than the p-value. Often scientists want to know the chance that they are later proven wrong. The p-value cannot give you this probability, but controlling the FDR with multiple testing does! (Huber 2019)↩︎\nThe FDR represents an expectation value, not a guarantee for any single experiment. It measures the average proportion of false rejections we would observe across many (theoretical) replications of the same experiment. In contrast, the actual false discovery proportion (FDP) in any individual experiment may be substantially higher or lower than this expected rate.↩︎\nI am surprised by how often the Bonferroni correction is still used to control the family-wise error rate. I know this correction is simple and it is often covered in the few statistic classes many people take/get. But read the Wikipedia entry or the 11 sentences of the p.adjust documentation in R and you will learn that Holm’s method dominates the Bonferroni without making any additional assumptions and is statistically thus always preferred. A shame that we leave such improvements on the table (although the difference most notable when proportion of false hypotheses is large (Goeman and Solari 2014)).↩︎\nThe original BH procedure did not include ‘adjusted’ p-values. The calculation I present yields identical results to their procedure and is (in my opinion) easier to follow. p.adjust also follows this calculation.↩︎"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "Max Oosterwegel",
+    "section": "",
+    "text": "I am a PhD student in environmental epidemiology at The Institute for Risk Assessment Sciences at Utrecht University. In this PhD I work with untargeted / nontargeted metabolomic data to study respiratory health outcomes (think asthma, COPD, lung function) across the life course. This PhD is financed by the EXPANSE and EXPOSOME-NL consortia which are part of a broader effort to systematically characterize the environment and its exposures to humans on a large scale (dubbed the exposome). I originally did my bachelor’s in artificial intelligence and a master in data science before pivoting to (environmental) epidemiology."
   },
   {
     "objectID": "blog/conditional-logistic-regression-omics/index.html",
@@ -68,13 +89,6 @@
     "title": "The advantages of conditional logistic regression in (metabol)omic matched case-control studies",
     "section": "Footnotes",
     "text": "Footnotes\n\n\nIn other fields also known as the hypergeometric-normal model, or as a ‘fixed-effects logit model for panel data’.↩︎\nWhen deriving this conditional likelihood from the stratum-specific logistic model (which includes \\(\\alpha\\)) the \\(\\alpha_k\\) term (representing the combined baseline risk and effects of all factors constant within matching set \\(k\\), including matching variables) appears in both the numerator and denominator and thus mathematically cancels out. This cancellation is why we often say these matching set-constant effects are “absorbed” into a cluster-specific intercept; they are removed from the likelihood equation that needs to be solved. See Hosmer, Lemeshow, and Sturdivant (2013), chap. 7 for more details on this derivation.↩︎\nUnder the hood, this function is a wrapper around coxph because the log likelihood of a conditional logistic regression is the same as a Cox model with a specific data structure. Apparently, you can also – in some cases (?) – fit a conditional logistic regression model using a generalized linear mixed model with particular random intercepts structure.↩︎"
-  },
-  {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "Max Oosterwegel",
-    "section": "",
-    "text": "I am a PhD student in environmental epidemiology at The Institute for Risk Assessment Sciences at Utrecht University. In this PhD I work with untargeted / nontargeted metabolomic data to study respiratory health outcomes (think asthma, COPD, lung function) across the life course. This PhD is financed by the EXPANSE and EXPOSOME-NL consortia which are part of a broader effort to systematically characterize the environment and its exposures to humans on a large scale (dubbed the exposome). I originally did my bachelor’s in artificial intelligence and a master in data science before pivoting to (environmental) epidemiology."
   },
   {
     "objectID": "blog/impute-and-remove-technical-variation-metabolomics/index.html",

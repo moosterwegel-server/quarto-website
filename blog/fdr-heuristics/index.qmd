@@ -1,0 +1,632 @@
+---
+title: "No, simply reducing the number of tests won't increase your power when you control the FDR"
+date: "2025-07-12"
+format: 
+  html: 
+      echo: true
+      message: false
+      warning: false
+      code-fold: true
+      fig-height: 3
+      highlight-style: arrow
+citation: true
+bibliography: references.bib
+---
+During my PhD, I have noticed that many people (and chatbots) apply a Bonferroni type of thinking to all multiple testing 'problems'[^2]. More tests inherently means much less power -- the thinking goes. However, this heuristic is not useful for methods that control the false discovery rate (FDR) such as the Benjamin-Hochberg (BH) procedure. In this blog post, I will briefly show why this Bonferroni heuristic fails here and what a better heuristic of statistical power is in situations where you aim to control the FDR.
+
+# Quick recap
+A quick recap for those of us who could use a refresher. The false discovery rate controls the expected proportion of false discoveries among all positives [^3]. Whereas methods that control the family wise error rate (FWER) such as Bonferroni control the probability that at least one null hypothesis is falsely rejected[^4]. Methods that control the FWER also automatically control the FDR. Especially when there are many false hypotheses FDR methods will be more powerful than FWER methods [@goeman_multiple_2014].
+
+[^1]: Chatbots too!
+[^2]: I very much like the framing from Wolfgang Huber on the false discovery rate: not as a problem but as an opportunity to get an answer to a more interesting question than the p-value. Often scientists want to know the chance that they are later proven wrong. The p-value cannot give you this probability, but controlling the FDR with multiple testing does! [@huber_reporting_2019]
+
+[^3]: The FDR represents an expectation value, not a guarantee for any single experiment. It measures the average proportion of false rejections we would observe across many (theoretical) replications of the same experiment. In contrast, the actual false discovery proportion (FDP) in any individual experiment may be substantially higher or lower than this expected rate.
+[^4]: I am surprised by how often the Bonferroni correction is still used to control the family-wise error rate.  I know this correction is simple and it is often covered in the few statistic classes many people take/get. But read the [Wikipedia entry](https://en.wikipedia.org/wiki/Bonferroni_correction) or the 11 sentences of the [p.adjust documentation in R](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/p.adjust.html) and you will learn that Holm’s method dominates the Bonferroni without making any additional assumptions and is statistically thus always preferred. A shame that we leave such improvements on the table (although the difference most notable when proportion of false hypotheses is large [@goeman_multiple_2014]).
+
+The Bonferroni method controls the FWER by simply dividing the alpha-level ($\alpha$) by the number of tests ($m$): by setting the significance threshold for each individual test to $\frac{\alpha}{m}$ you ensure that the probability of an error on any single test is no more than $\frac{\alpha}{m}$. You can also adjust the p-value instead of the alpha-level by multiplying the p-value by $m$.
+
+The BH procedure controls the FDR by the following procedure:
+
+1.	Sort the p-values from small to large. The smallest number gets rank ($k$) 1, the largest gets rank $m$. 
+
+2.	Multiply the p-value by $\frac{m}{k}$.
+
+3.	Ensure monotonicity by taking the cumulative minimum -- each adjusted p-value becomes the minimum of itself and all adjusted p-values at larger ranks. 
+
+4.  Cap the result from step 3 at 1. 
+
+5.	Reject the null hypothesis for all hypothesis with an adjusted p-values smaller than alpha $\alpha$.
+
+It's important to note here that the FDR does not apply to an individual hypothesis, but to all hypotheses in the set that is formed by rejecting all hypotheses with a p-value equal to or smaller than that rank. In other words, you need to interpret the 'adjusted' p-value of a hypothesis as the alpha level at which this hypothesis would be rejected. 
+
+# Why the number of tests is a bad heuristic: a numerical demonstration
+
+Consider the following p-values, and the accompanying FDR calculation[^5]:
+
+[^5]: The original BH procedure did not [include](https://stats.stackexchange.com/a/287199) 'adjusted' p-values. The calculation I present yields identical results to their procedure and is (in my opinion) easier to follow. `p.adjust` also follows this calculation.
+
+```{r}
+library(gt)
+
+show_fdr_calculation <- function(df, alpha) {
+  df |> 
+    dplyr::arrange(desc(p.value)) |> 
+    dplyr::mutate(m = length(p.value),
+                  p.value = p.value,
+                  k = rev(dplyr::row_number()), 
+                  adj_calc = glue::glue("$${p.value} \\times ({m}/{k})$$"),
+                  adj_result = p.value * (m/k),
+                  cummin_input  = purrr::map_chr(1:length(adj_result), 
+                                                 ~ paste(round(adj_result[1:.x], 2), collapse = ", ")),
+                  cummin_calc= glue::glue("min([{cummin_input}])"),
+                  cummin_result =  cummin(adj_result),
+                  cap_calc = glue::glue("pmin(1, {round(cummin_result, 2)})"), 
+                  cap_result = pmin(1, cummin(adj_result)),
+                  # bh = p.adjust(p.value, 'BH'), # to check
+                  reject = ifelse(cap_result < alpha, "reject", "")) |> 
+    dplyr::arrange(k)
+}
+
+set.seed(202507)
+alpha <- 0.05
+
+tibble::tibble(p.value = c(0.01, 0.01, 0.01, 0.01, 0.05, 0.25, 0.25, 0.3, 0.8, 0.8, 0.9)) |> 
+  show_fdr_calculation(alpha) |> 
+  dplyr::select("k" = k, 
+         "p_value" = p.value, 
+         "adj_calc" = adj_calc, 
+         "adj_result" = adj_result, 
+         "cummin_calc" = cummin_calc, 
+         "cummin_result" = cummin_result, 
+         "cap_calc" = cap_calc, 
+         "cap_result" = cap_result, 
+         "reject" = reject) |> 
+  gt() |>
+  cols_label(k = md("$$k$$"),
+             p_value = md("$$p$$"),
+             adj_calc = md("**Step 2: calculation**"),
+             adj_result = md("**Step 2: result**"),
+             cummin_calc = md("**Step 3: calculation**"),
+             cummin_result = md("**Step 3: result**"),
+             cap_calc = md("**Step 4: calculation**"),
+             cap_result = md("**Step 4: result**"),
+             reject = md("**Step 5: decision**")) |>
+  fmt_number(columns = c(p_value, adj_result, cummin_result, cap_result),
+             decimals = 2) |>
+  data_color(columns = reject,
+             colors = scales::col_factor(
+               palette = c("white", "#e8f5e8"),
+               domain = c("", "reject"))) |> 
+  tab_style(style = cell_text(weight = "bold"),
+            locations = cells_body(columns = reject, rows = reject == "reject")) |>
+  tab_style(style = cell_text(color = "#28a745", weight = "bold"),
+            locations = cells_body(columns = reject, rows = reject == "reject")) |>
+  tab_options(table.font.size = 12,
+              heading.background.color = "#f8f9fa",
+              heading.title.font.size = 16,
+              heading.subtitle.font.size = 14,
+              column_labels.background.color = "#e9ecef",
+              column_labels.font.weight = "bold",
+              table.border.top.style = "solid",
+              table.border.top.width = px(2),
+              table.border.top.color = "#dee2e6",
+              table.border.bottom.style = "solid",
+              table.border.bottom.width = px(2),
+              table.border.bottom.color = "#dee2e6",
+              column_labels.border.bottom.style = "solid",
+              column_labels.border.bottom.width = px(1),
+              column_labels.border.bottom.color = "#dee2e6",
+              row_group.border.top.style = "solid",
+              row_group.border.top.width = px(1),
+              row_group.border.top.color = "#dee2e6",
+              stub.background.color = "#f8f9fa",
+              stub.border.style = "solid",
+              stub.border.width = px(1),
+              stub.border.color = "#dee2e6") |>
+  tab_style(style = cell_text(font = "monospace", size = "smaller"),
+            locations = cells_body(columns = c(adj_calc, cummin_calc, cap_calc))) |>
+  cols_align(align = "center",
+             columns = c(k, p_value, adj_result, cummin_result, cap_result)) |>
+  cols_align(align = "left",
+             columns = c(adj_calc, cummin_calc, cap_calc)) |>
+  cols_align(align = "center",
+             columns = reject)
+```
+
+If we look at the FDR calculation in the table, we see that we initially perform a Bonferroni correction on the lowest rank, and with the number of tests $m$ in the nominator ($p \times \frac{m}{k}$) we multiply by a bigger number resulting in higher p-values if $m$ is larger. So why is the number of tests still a bad heuristic for statistical power here? 
+
+Well, in the step afterwards, we take the cumulative minimum to ensure monotonicity. This means that the final adjusted p-value for a given test is the smallest raw adjustment among all the tests with an equal or higher p-value. 
+
+The impact of this is easiest to see if we have p-value repetitions like above (only possible with discrete tests but alas). While the first instance gets a raw adjustment of ($\frac{m}{1} = m$), the last instance gets a more favorable adjustment of $\frac{m}{4}$ and because of the cumulative minimum rule, all 4 of these identical p-values will ultimately be assigned the same, more favorable adjusted p-value -- the one from the 4th instance. This shows that as the p-values become denser, the cumulative step ensures that groups of similar p-values are evaluated based on the most optimistic rank in their group -- leading to a less harsh penalty of adding more tests than when you control the FWER using Bonferroni.
+
+# Why the number of tests is a bad heuristic: a visual demonstration
+
+The FDR method is often also illustrated with rank plots or histograms of the p-values. And I think those plots illustrate best why the Bonferroni intuition does not quite work here. Beforehand it is crucial to know that when a null hypothesis is true, the p-values are uniformly distributed. And when the null hypothesis is false the p-values display a right skew. As such when your multiple testing set includes both true and false null hypotheses you will have a mixture of those distributions. 
+
+In the interactive visualization below we plot the null and alternative hypotheses that we are testing. The alternative hypotheses are based on a Cohen's $d$ of 0.15 in a study of size 250. You can change this effect size, the number of tests ($m$), the proportion of your tests where the null hypothesis is true ($\pi_0$), and the level at which you control the FDR ($\alpha$) and see how the metrics like the statistical power changes based on changes in input. 
+
+::: {.column-page}
+```{ojs}
+d3 = require("d3")
+jStat = require("jstat")
+
+unified_layout = {
+  const container = d3.create("div")
+    .style("width", "100%")
+    .style("background-color", "#f9f9f9")
+    .style("border-radius", "20px")
+    .style("padding-top", "20px")
+    .style("margin-bottom", "10px")
+
+  function createSlider(config) {
+    const sliderContainer = d3.create("div")
+      .style("padding", "8px")
+      .style("background-color", "#f9f9f9")
+      .style("margin-bottom", "8px")
+    
+    sliderContainer.append("label")
+      .style("display", "block")
+      .style("margin-bottom", "4px")
+      .style("font-weight", "600")
+      .style("font-size", "12px")
+      .style("color", "#495057")
+      .text(config.label)
+    
+    const slider = sliderContainer.append("input")
+      .attr("type", "range")
+      .attr("min", config.min)
+      .attr("max", config.max)
+      .attr("step", config.step)
+      .attr("value", config.value)
+      .style("width", "100%")
+      .style("height", "6px")
+      .style("margin-bottom", "4px")
+    
+    const valueDisplay = sliderContainer.append("div")
+      .style("text-align", "center")
+      .style("font-size", "11px")
+      .style("color", "#6c757d")
+      .text(config.value)
+    
+    return { container: sliderContainer, slider, valueDisplay }
+  }
+
+  const controlsSection = container.append("div")
+    .style("display", "grid")
+    .style("grid-template-columns", "repeat(4, 1fr)")
+    .style("gap", "10px")
+
+  const slider1 = createSlider({
+    label: "Number of tests",
+    min: 100,
+    max: 10000,
+    step: 100,
+    value: 5000
+  })
+  controlsSection.append(() => slider1.container.node())
+
+  const slider2 = createSlider({
+    label: "Cohen's d under H1",
+    min: 0,
+    max: 0.5,
+    step: 0.025,
+    value: 0.15
+  })
+  controlsSection.append(() => slider2.container.node())
+
+  const slider3 = createSlider({
+    label: "Prop. of tests that are null",
+    min: 0,
+    max: 1,
+    step: 0.025,
+    value: 0.9
+  })
+  controlsSection.append(() => slider3.container.node())
+
+  const slider4 = createSlider({
+    label: "Control FDR at",
+    min: 0,
+    max: 0.3,
+    step: 0.01,
+    value: 0.1
+  })
+  controlsSection.append(() => slider4.container.node())
+
+  const plotsSection = container.append("div")
+    .style("display", "grid")
+    .style("grid-template-columns", "repeat(3, 1fr)")
+    .style("gap", "15px")
+    .style("background-color", "#f9f9f9")
+    
+  // plot containers
+  const plot1Container = plotsSection.append("div").style("display", "flex").style("justify-content", "center")
+  const plot2Container = plotsSection.append("div").style("display", "flex").style("justify-content", "center")
+  const plot3Container = plotsSection.append("div").style("display", "flex").style("justify-content", "center")
+  const plot4Container = plotsSection.append("div").style("display", "flex").style("justify-content", "center")
+  const plot5Container = plotsSection.append("div").style("display", "flex").style("justify-content", "center")
+  const plot6Container = plotsSection.append("div").style("display", "flex").style("justify-content", "center")
+
+  const confusionSection = container.append("div")
+    .style("display", "flex")
+    .style("justify-content", "center")
+    .style("align-items", "flex-start")
+    .style("gap", "40px")
+    .style("padding", "20px")
+
+  const confusionContainer = confusionSection.append("div")
+  const metricsContainer = confusionSection.append("div")
+
+  function benjaminiHochberg(pValues) {
+      const m = pValues.length;
+      if (m === 0) return [];
+      let indexedPValues = pValues.map((p, originalIndex) => ({ p, originalIndex }));
+      indexedPValues.sort((a, b) => a.p - b.p);
+      let lastQ = 1;
+      for (let i = m - 1; i >= 0; i--) {
+          const rank = i + 1;
+          const p = indexedPValues[i].p;
+          const q = Math.min(lastQ, (m / rank) * p);
+          indexedPValues[i].q = q;
+          lastQ = indexedPValues[i].q;
+      }
+      const results = new Array(m);
+      for (const val of indexedPValues) {
+           results[val.originalIndex] = { p: val.p, q: val.q };
+      }
+      return results;
+  }
+
+  function drawHistogram(data, title) {
+    const width = 280;
+    const height = 200;
+    const margin = {top: 40, right: 20, bottom: 60, left: 60};
+    
+    const svg = d3.create("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .style("background-color", "#f9f9f9")
+    
+    const x = d3.scaleLinear()
+      .domain([0, 1])
+      .range([margin.left, width - margin.right]);
+    
+    const bins = d3.histogram()
+      .domain(x.domain())
+      .thresholds(25)(data);
+    
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(bins, d => d.length)])
+      .range([height - margin.bottom, margin.top]);
+    
+    svg.selectAll("rect")
+      .data(bins)
+      .join("rect")
+      .attr("x", d => x(d.x0))
+      .attr("y", d => y(d.length))
+      .attr("width", d => x(d.x1) - x(d.x0) - 1)
+      .attr("height", d => y(0) - y(d.length))
+      .attr("fill", "#4758ab");
+    
+    svg.append("g")
+      .attr("transform", `translate(0,${height - margin.bottom})`)
+      .call(d3.axisBottom(x).ticks(5))
+      .selectAll("text")
+      .style("font-size", "12px");
+    
+    svg.append("g")
+      .attr("transform", `translate(${margin.left},0)`)
+      .call(d3.axisLeft(y).ticks(4))
+      .selectAll("text")
+      .style("font-size", "12px");
+    
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", height - 10)
+      .attr("text-anchor", "middle")
+      .style("font-size", "14px")
+      .style("font-weight", "600")
+      .text("p-value");
+    
+    svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -height / 2)
+      .attr("y", 20)
+      .attr("text-anchor", "middle")
+      .style("font-size", "14px")
+      .style("font-weight", "600")
+      .text("Frequency");
+    
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", 25)
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .style("font-weight", "600")
+      .text(title);
+    
+    return svg.node();
+  }
+
+  function drawRankPlot(data, title, alpha = null) {
+    const width = 280;
+    const height = 200;
+    const margin = {top: 40, right: 20, bottom: 60, left: 60};
+    
+    const m = data.length;
+    const sorted_data = [...data].sort((a, b) => a - b);
+    
+    const plot_data = sorted_data.map((p_value, k) => ({
+      observed: p_value,
+      expected: (k + 1) / m 
+    }));
+    
+    const sample_plot_data = m > 500 ? plot_data.filter((_, i) => i % Math.floor(m / 500) === 0) : plot_data;
+    
+    const svg = d3.create("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .style("background-color", "#f9f9f9")
+    
+    const x = d3.scaleLinear()
+      .domain([0, 1])
+      .range([margin.left, width - margin.right]);
+    
+    const y = d3.scaleLinear()
+      .domain([0, 1])
+      .range([height - margin.bottom, margin.top]);
+    
+    svg.append("line")
+      .attr("x1", x(0))
+      .attr("y1", y(0))
+      .attr("x2", x(1))
+      .attr("y2", y(1))
+      .attr("stroke", "grey")
+      .attr("stroke-dasharray", "4,4");
+    
+    const line = d3.line()
+      .x(d => x(d.expected))
+      .y(d => y(d.observed));
+    
+    svg.append("path")
+      .datum(plot_data)
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 2)
+      .attr("d", line);
+    
+    svg.selectAll("circle")
+      .data(sample_plot_data)
+      .join("circle")
+      .attr("cx", d => x(d.expected))
+      .attr("cy", d => y(d.observed))
+      .attr("r", 1.5)
+      .attr("fill", "steelblue");
+    
+    if (alpha) {
+      svg.append("line")
+        .attr("x1", x(0))
+        .attr("y1", y(0))
+        .attr("x2", x(1))
+        .attr("y2", y(alpha))
+        .attr("stroke", "red")
+        .attr("stroke-width", 1.5);
+    }
+    
+    svg.append("g")
+      .attr("transform", `translate(0,${height - margin.bottom})`)
+      .call(d3.axisBottom(x).ticks(4))
+      .selectAll("text")
+      .style("font-size", "12px");
+    
+    svg.append("g")
+      .attr("transform", `translate(${margin.left},0)`)
+      .call(d3.axisLeft(y).ticks(4))
+      .selectAll("text")
+      .style("font-size", "12px");
+    
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", height - 10)
+      .attr("text-anchor", "middle")
+      .style("font-size", "14px")
+      .style("font-weight", "600")
+      .text("Expected p-value");
+    
+    svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -height / 2)
+      .attr("y", 20)
+      .attr("text-anchor", "middle")
+      .style("font-size", "14px")
+      .style("font-weight", "600")
+      .text("Observed P-Value");
+    
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", 25)
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .style("font-weight", "600")
+      .text(title);
+    
+    return svg.node();
+  }
+
+  function createConfusionMatrix(metrics) {
+    const table = d3.create("table")
+      .style("border-collapse", "collapse")
+      .style("margin", "0 auto")
+      .style("font-size", "14px");
+
+    const header = table.append("thead").append("tr");
+    header.append("th").style("border", "1px solid #ddd").style("padding", "8px").text("");
+    header.append("th").style("border", "1px solid #ddd").style("padding", "8px").style("background-color", "#f8f9fa").text("Rejected");
+    header.append("th").style("border", "1px solid #ddd").style("padding", "8px").style("background-color", "#f8f9fa").text("Not Rejected");
+
+    const tbody = table.append("tbody");
+    
+    const row1 = tbody.append("tr");
+    row1.append("td").style("border", "1px solid #ddd").style("padding", "8px").style("background-color", "#f8f9fa").style("font-weight", "bold").text("H1 True");
+    row1.append("td").style("border", "1px solid #ddd").style("padding", "8px").style("background-color", "#d4edda").text(`${metrics.TP} (TP)`);
+    row1.append("td").style("border", "1px solid #ddd").style("padding", "8px").style("background-color", "#f8d7da").text(`${metrics.FN} (FN)`);
+
+    const row2 = tbody.append("tr");
+    row2.append("td").style("border", "1px solid #ddd").style("padding", "8px").style("background-color", "#f8f9fa").style("font-weight", "bold").text("H0 True");
+    row2.append("td").style("border", "1px solid #ddd").style("padding", "8px").style("background-color", "#f8d7da").text(`${metrics.FP} (FP)`);
+    row2.append("td").style("border", "1px solid #ddd").style("padding", "8px").style("background-color", "#d4edda").text(`${metrics.TN} (TN)`);
+
+    return table.node();
+  }
+
+function createMetricsTable(metrics) {
+    const table = d3.create("table")
+      .style("border-collapse", "collapse")
+      .style("margin", "0 auto")
+      .style("font-size", "14px");
+    
+    const tbody = table.append("tbody");
+    
+    const rejectedRow = tbody.append("tr");
+    rejectedRow.append("td")
+      .style("border", "1px solid #ddd")
+      .style("padding", "8px")
+      .style("background-color", "#f8f9fa")
+      .style("font-weight", "bold")
+      .text("Rejected:");
+    rejectedRow.append("td")
+      .style("border", "1px solid #ddd")
+      .style("padding", "8px")
+      .style("background-color", "#f8f9fa")
+      .text(metrics.r);
+    
+    const sensitivityRow = tbody.append("tr");
+    sensitivityRow.append("td")
+      .style("border", "1px solid #ddd")
+      .style("padding", "8px")
+      .style("background-color", "#f8f9fa")
+      .style("font-weight", "bold")
+      .text("Power:");
+    sensitivityRow.append("td")
+      .style("border", "1px solid #ddd")
+      .style("padding", "8px")
+      .style("background-color", "#f8f9fa")
+      .text(metrics.sensitivity.toFixed(3));
+      
+    const fdrRow = tbody.append("tr");
+    fdrRow.append("td")
+      .style("border", "1px solid #ddd")
+      .style("padding", "8px")
+      .style("background-color", "#f8f9fa")
+      .style("font-weight", "bold")
+      .text("FDP:");
+    fdrRow.append("td")
+      .style("border", "1px solid #ddd")
+      .style("padding", "8px")
+      .style("background-color", "#f8f9fa")
+      .text(metrics.fdr.toFixed(3));
+    
+    return table.node();
+}
+
+  function updateVisualization() {
+    const nr_tests = parseInt(slider1.slider.property("value"));
+    const cohen_d_alt = parseFloat(slider2.slider.property("value"));
+    const prop_null = parseFloat(slider3.slider.property("value"));
+    const alpha = parseFloat(slider4.slider.property("value"));
+
+    slider1.valueDisplay.text(nr_tests);
+    slider2.valueDisplay.text(cohen_d_alt);
+    slider3.valueDisplay.text(prop_null);
+    slider4.valueDisplay.text(alpha);
+
+    // actual data calculations
+    const n = 250; // size study
+    const nr_h0_tests = Math.floor(nr_tests * prop_null);
+    const nr_h1_tests = Math.floor(nr_tests * (1 - prop_null));
+
+    const ncp = cohen_d_alt * Math.sqrt(n);
+    const p_values_h1 = [];
+    for (let i = 0; i < nr_h1_tests; i++) {
+      const z = d3.randomNormal(ncp, 1)();
+      const p = 2 * (1 - jStat.normal.cdf(Math.abs(z), 0, 1));
+      p_values_h1.push(p);
+    }
+
+    const p_values_h0 = Array.from({length: nr_h0_tests}, Math.random) 
+
+    const p_values_merged = p_values_h0.concat(p_values_h1);
+
+    // calculate metrics
+    const bh_results = benjaminiHochberg(p_values_merged);
+    const m = bh_results.length
+    const r = bh_results.filter(r => r.q < alpha).length; 
+    
+    const h0_results = bh_results.slice(0, nr_h0_tests);
+    const h1_results = bh_results.slice(nr_h0_tests, nr_tests);
+  
+    const TP = h1_results.filter(r => r.q < alpha).length;
+    const FP = h0_results.filter(r => r.q < alpha).length;
+    const FN = h1_results.filter(r => r.q >= alpha).length;
+    const TN = h0_results.filter(r => r.q >= alpha).length;
+    // const total_rejections = TP + FP;
+    const fdr = r === 0 ? 0 : FP / r;
+    const sensitivity = (TP + FN) === 0 ? 0 : TP / (TP + FN);
+    const metrics = {m, r, TP, FP, FN, TN, fdr, sensitivity};
+
+    // clear and update plots
+    plot1Container.selectAll("*").remove();
+    plot2Container.selectAll("*").remove();
+    plot3Container.selectAll("*").remove();
+    plot4Container.selectAll("*").remove();
+    plot5Container.selectAll("*").remove();
+    plot6Container.selectAll("*").remove();
+
+    plot1Container.append(() => drawHistogram(p_values_h0, "H0 p-values"));
+    plot2Container.append(() => drawHistogram(p_values_h1, "H1 p-values"));
+    plot3Container.append(() => drawHistogram(p_values_merged, "H0 + H1 p-Values"));
+    plot4Container.append(() => drawRankPlot(p_values_h0, "H0 rank plot"));
+    plot5Container.append(() => drawRankPlot(p_values_h1, "H1 rank plot"));
+    plot6Container.append(() => drawRankPlot(p_values_merged, "H0 + H1 rank plot", alpha));
+
+    // update confusion matrix and metrics
+    confusionContainer.selectAll("*").remove();
+    metricsContainer.selectAll("*").remove();
+    confusionContainer.append(() => createConfusionMatrix(metrics));
+    metricsContainer.append(() => createMetricsTable(metrics));
+  }
+
+  // event listeners
+  slider1.slider.on("input", updateVisualization);
+  slider2.slider.on("input", updateVisualization);
+  slider3.slider.on("input", updateVisualization);
+  slider4.slider.on("input", updateVisualization);
+
+  // initial render
+  updateVisualization();
+
+  return container.node();
+}
+```
+:::
+
+The BH procedure exploits the mixture of null and alternative hypotheses through a clever strategy. The procedure searches for the "elbow" or "knee" of the J-shaped curve -- the critical point where p-values transition from exceptionally small (generated by the alternative distribution) to randomly distributed (consistent with the null). The red line illustrates this search process. By identifying the last p-value that falls below this line, the procedure separates p-values that are collectively "too small to arise from the null distribution alone" from those that remain consistent with it. 
+
+The procedure rejects every hypothesis with a p-value below the red line. When you increase $\alpha$, the line becomes steeper and the procedure rejects more hypotheses—more p-values fall below the steeper threshold. 
+
+Importantly, when you change the number of hypotheses, your statistical power remains relatively stable.
+
+# A better heuristic
+Now, why is that? The visual illustration shows us that statistical power here is better described as a function of the _shape_ of the p-value distribution, and this shape does not change when the number of tests changes! This shape only changes when the effect sizes of the alternative hypotheses changes, or if proportion of the tests where the null is true changes. 
+
+I think a better, more useful predictor of statistical power is therefore [your expectation about the ratio of true and false nulls in your tests, and the effect sizes you expect if the null is false]{.underline}. True null hypotheses or false null hypotheses with small effects are very unlikely to give a small enough p-value to be rejected, and therefore the only effect of their inclusion is a worsening of the critical values of more promising hypotheses.
+
+Methods that slightly improve on the statistical power of the BH procedure (while still controlling the type I error rate) such as independent hypothesis weighting and stratified false discovery control, use the same logic (@sun_stratified_2006, @ignatiadis_covariate_2021). Stratified false discovery control calculates the FDR separately per level of a factor and as long as the proportion of null hypotheses differ across the levels, its power will be greater than the BH procedure. Similarly, the independent hypothesis weighting method also uses a covariate (both continuous and categorical) that is informative of statistical properties of the hypothesis tests, but now automatically learns how to weigh the hypotheses such that power is optimized while still controlling the FDR.
+
+# A concluding example
+In untargeted metabolomics, some compounds will break into fragments. This fragmentation will result in very strongly correlated features in your dataset -- they come from the same source after all. Reducing the number of features by grouping/clustering these fragments (on retention time) is then often done, keeping only one feature per group. Depending on the platform this can reduce the number of features by more than a magnitude. While this clustering definitely makes sense from a data generation perspective, people should not expect the statistical power of their subsequent tests to majorly change, because the signal to noise ratio likely has not changed: we have reduced our signal and noise by the same factor! Improvements in power would come from reducing the noise by a bigger factor than the signal. This can be accomplished in many ways. Some examples include multivariate methods like PCA, removing technical variation from metabolomic data, or analyses that separately test more promising features.
+
+```{r}
+#| echo: false
+session_info <- capture.output(sessionInfo())
+writeLines(session_info, "session_info.txt")
+```
