@@ -1,5 +1,5 @@
 ---
-title: "The advantages of conditional logistic regression in (metabol)omic matched case-control studies"
+title: "The advantages of conditional logistic regression in matched case-control studies of (metabol)omic data"
 date: "2025-05-05"
 format: 
   html: 

@@ -10,7 +10,7 @@
 <atom:link href="https://maxoosterwegel.com/index.xml" rel="self" type="application/rss+xml"/>
 <description>Blog Max Oosterwegel ( ._.)</description>
 <generator>quarto-1.7.27</generator>
-<lastBuildDate>Fri, 11 Jul 2025 22:00:00 GMT</lastBuildDate>
+<lastBuildDate>Thu, 17 Jul 2025 22:00:00 GMT</lastBuildDate>
 <item>
   <title>No, simply reducing the number of tests won’t increase your power when you control the FDR</title>
   <dc:creator>Max J. Oosterwegel</dc:creator>
@@ -6323,21 +6323,21 @@ Sun, Lei, Radu V. Craiu, Andrew D. Paterson, and Shelley B. Bull. 2006. <span>�
   author = {Oosterwegel, Max J.},
   title = {No, Simply Reducing the Number of Tests Won’t Increase Your
     Power When You Control the {FDR}},
-  date = {2025-07-12},
+  date = {2025-07-18},
   url = {https://maxoosterwegel.com/blog/fdr-heuristics/},
   doi = {placeholder},
   langid = {en}
 }
 </code></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-oosterwegel2025" class="csl-entry quarto-appendix-citeas">
 Oosterwegel, Max J. 2025. <span>“No, Simply Reducing the Number of Tests
-Won’t Increase Your Power When You Control the FDR.”</span> July 12,
+Won’t Increase Your Power When You Control the FDR.”</span> July 18,
 2025. <a href="https://doi.org/placeholder">https://doi.org/placeholder</a>.
 </div></div></section></div> ]]></description>
   <guid>https://maxoosterwegel.com/blog/fdr-heuristics/</guid>
-  <pubDate>Fri, 11 Jul 2025 22:00:00 GMT</pubDate>
+  <pubDate>Thu, 17 Jul 2025 22:00:00 GMT</pubDate>
 </item>
 <item>
-  <title>The advantages of conditional logistic regression in (metabol)omic matched case-control studies</title>
+  <title>The advantages of conditional logistic regression in matched case-control studies of (metabol)omic data</title>
   <dc:creator>Max J. Oosterwegel</dc:creator>
   <link>https://maxoosterwegel.com/blog/conditional-logistic-regression-omics/</link>
   <description><![CDATA[ 
@@ -6836,8 +6836,8 @@ Pearce, Neil. 2016. <span>“Analysis of Matched Case-Control Studies.”</span>
 </ol>
 </section><section class="quarto-appendix-contents" id="quarto-citation"><h2 class="anchored quarto-appendix-heading">Citation</h2><div><div class="quarto-appendix-secondary-label">BibTeX citation:</div><pre class="sourceCode code-with-copy quarto-appendix-bibtex"><code class="sourceCode bibtex">@online{oosterwegel2025,
   author = {Oosterwegel, Max J.},
-  title = {The Advantages of Conditional Logistic Regression in
-    (Metabol)omic Matched Case-Control Studies},
+  title = {The Advantages of Conditional Logistic Regression in Matched
+    Case-Control Studies of (Metabol)omic Data},
   date = {2025-05-05},
   url = {https://maxoosterwegel.com/blog/conditional-logistic-regression-omics/},
   doi = {placeholder},
@@ -6845,8 +6845,8 @@ Pearce, Neil. 2016. <span>“Analysis of Matched Case-Control Studies.”</span>
 }
 </code></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-oosterwegel2025" class="csl-entry quarto-appendix-citeas">
 Oosterwegel, Max J. 2025. <span>“The Advantages of Conditional Logistic
-Regression in (Metabol)omic Matched Case-Control Studies.”</span> May 5,
-2025. <a href="https://doi.org/placeholder">https://doi.org/placeholder</a>.
+Regression in Matched Case-Control Studies of (Metabol)omic
+Data.”</span> May 5, 2025. <a href="https://doi.org/placeholder">https://doi.org/placeholder</a>.
 </div></div></section></div> ]]></description>
   <guid>https://maxoosterwegel.com/blog/conditional-logistic-regression-omics/</guid>
   <pubDate>Sun, 04 May 2025 22:00:00 GMT</pubDate>

@@ -1,6 +1,6 @@
 ---
 title: "No, simply reducing the number of tests won't increase your power when you control the FDR"
-date: "2025-07-12"
+date: "2025-07-18"
 format: 
   html: 
       echo: true
