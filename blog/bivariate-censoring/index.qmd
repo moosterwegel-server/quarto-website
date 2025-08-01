@@ -1,0 +1,435 @@
+---
+title: "Fitting models to bivariate left-censored data"
+date: "2025-07-30"
+format: 
+  html: 
+      echo: true
+      message: false
+      warning: false
+      code-fold: true
+      fig-height: 4
+execute: 
+  cache: true
+citation: true
+bibliography: references.bib
+---
+```{r}
+#| echo: false
+#| output: false
+color_text <- function(text, hex_color, bg = FALSE) {
+  if (bg) {
+    # Light background version
+    bg_color <- paste0(hex_color, "20")  # Add transparency
+    htmltools::span(
+      style = paste0("color: ", hex_color, "; background-color: ", bg_color, "; padding: 1px 3px; border-radius: 2px; font-weight: bold;"),
+      text
+    )
+  } else {
+    # Just colored text
+    htmltools::span(
+      style = paste0("color: ", hex_color, "; font-weight: bold;"),
+      text
+    )
+  }
+}
+```
+In past blog posts I have discussed the phenomenon of left-censored data that we often encounter when we work with biological assays. I discussed strategies to  handle these data appropriately using maximum likelihood and Bayesian approaches. Moreover, I went over how to remove technical variation in such data. In this blog post, I will discuss situations where things get a little trickier because two (bivariate) or more (multivariate) variables are censored and you want to consider all of them in your statistical analysis.
+
+# An illustration
+Consider a common scenario: your biological assay measures two variables, and you want to analyze their correlation. This correlation may interest you directly, or you may need it to estimate covariance accurately for subsequent analyses. Both variables, however, contain nondetects -- values below the limit of detection (LOD) whose exact measurements remain unknown. Below a visual depiction of such a scenario:
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+seed <- 2507
+set.seed(seed) 
+
+a <- 1.5
+b <- 2.0
+sigma_y <- 3.5
+mu_x <- 10
+sigma_x <- 3
+
+n <- 500
+
+gen_data <- function(n, a, b, sigma_y, sigma_x, mu_x, prop_x = 0.3, prop_y = 0.5)  {
+  x <- rnorm(n, mu_x, sigma_x)
+  y <- a + b * x + rnorm(n, 0, sigma_y)
+  
+  lod_y <- quantile(y, prop_y, names = FALSE)
+  lod_x <- quantile(x, prop_x, names = FALSE)
+  
+  x_obs <- pmax(lod_x, x)
+  y_obs <- pmax(lod_y, y)
+  
+  df <- data.frame(x, y, x_obs, y_obs, lod_x, lod_y) |> 
+    mutate(x_cens = x_obs == lod_x,
+           y_cens = y_obs == lod_y)
+  return(df)
+}
+
+df <- gen_data(n, a, b, sigma_y, sigma_x, mu_x)
+
+x_limit <- c(0, max(df$x_obs) * 1.02)
+y_limit <- c(0, max(df$y_obs) * 1.02)
+
+plot_bivariate_censoring <- function(df, xlimit, ylimit, lod_x, lod_y) {
+  df |> 
+    ggplot(aes(x = x, y = y)) +
+    annotate("rect", xmin = x_limit[1], xmax = lod_x, ymin = lod_y, ymax = y_limit[2], fill = "#dbdbdb", alpha = 0.8) +
+    annotate("rect", xmin = x_limit[1], xmax = lod_x, ymin = x_limit[1], ymax = lod_y, fill = "#dbdbdb", alpha = 0.8) +
+    annotate("rect", xmin = lod_x, xmax = x_limit[2], ymin = x_limit[1], ymax = lod_y, fill = "#dbdbdb", alpha = 0.8) +
+    geom_point(data = dplyr::filter(df, x > lod_x, y > lod_y)) +
+    geom_point(data = dplyr::filter(df, x <= lod_x | y <= lod_y), shape = 5) +
+    geom_vline(xintercept = lod_x, linetype = 'dashed') +
+    geom_hline(yintercept = lod_y, linetype = 'dashed') +
+    annotate("text", x = lod_x / 2, y = (lod_y + y_limit[2]) / 2, label = "X censored, Y observed", size = 4) +
+    annotate("text", x = lod_x / 2, y = lod_y / 2, label = "X censored, Y censored", size = 4) +
+    annotate("text", x = (lod_x + x_limit[2]) / 2, y = lod_y / 2, label = "X observed, Y censored", size = 4) +
+    annotate("text", x = x_limit[2], y = lod_y, label = "LOD of Y", vjust = -0.5, hjust = 1, size = 4) +
+    annotate("text", x = lod_x, y = y_limit[2], label = "LOD of X", vjust = 1, hjust = -0.1, size = 4) +
+    coord_cartesian(xlim = x_limit,
+                    ylim = y_limit,
+                    expand = FALSE, # prevent ggplot from adding extra space
+                    clip = 'off') +   # allow the "LOD of Y" label to be drawn in the margin +
+    labs(x = "X", y = "Y") +
+    theme_minimal() +
+    theme(axis.line = element_line(colour = "black", linewidth = rel(1)),
+          panel.border = element_blank())
+}
+
+plot_bivariate_censoring(df, xlimit, ylimit, df$lod_x[1], df$lod_y[1]) +
+  geom_smooth(data = dplyr::filter(df, !x_cens, !y_cens), method = 'lm',  color = '#DDAA33', se = FALSE) +
+  geom_smooth(data = dplyr::filter(df), method = 'lm', color = '#004488', se = FALSE)
+```
+Also drawn in this illustration are the `r color_text("true", "#004488")` regression slope and the slope based on a `r color_text("complete", "#DDAA33")` case analysis of the data. You can see that the `r color_text("estimated", "#DDAA33")` slope is quite different from the `r color_text("true", "#004488")` slope. so unfortunately we can't simply do a complete case analysis with only the samples that were above the limit of detection as that will bias our estimate. Importantly, this also throws away valuable data.
+
+So what can we do? Unfortunately, as far as I'm aware there is no readily available statistical software that let's us easily specify a model to accommodate this type of data. We need to come up with something ourselves. Let me walk through some of those manual options I have come across.
+
+# Possible remedies
+## Impute separately
+We have imputed left-censored data before by fitting a tobit model to the data and randomly drawing values below the limit of detection for our nondetects. What if we do that here?
+```{r}
+#| code-fold: false
+# random sampling from a truncated normal variable via the cdf inversion method 
+# (also known as inverse transform sampling)
+draw_values_interval <- function(mu, sd, start, end) {
+  # what percentiles belong to start value with these params
+  unif_lower <- pnorm(start, mu, sd) 
+  # what percentiles belong to end value with these params
+  unif_upper <- pnorm(end,  mu, sd) 
+  # draw random percentiles between lower and upper
+  rand_perc_interval <- runif(length(mu),  unif_lower, unif_upper) 
+  # get value belonging to percentile
+  drawn_values <- qnorm(rand_perc_interval, mu, sd) 
+  return(drawn_values)
+}
+
+#' @param y vector with incomplete data
+#' @param ry logical vector indicating observed (TRUE) and missing (FALSE) values
+#' @param x matrix of predictors
+#' @param wy logical vector indicating which values to impute
+#' @param lod list of length y where y was left-censored
+#' @return vector of imputed values
+impute_tobit <- function(y, x, rhs_formula, cens = NULL, lod = NULL, ...) {
+  obs <- !cens
+  y1 <- y
+  y1[cens] <- lod[cens]
+  
+  df <- dplyr::bind_cols(y1, obs, lod, cens, x)
+  
+  m <- survival::survreg(as.formula(
+    glue::glue("survival::Surv(y1, obs, type = 'left') ~ {rhs_formula}")), 
+                         data = df, dist = "gaussian")
+  imputations <- draw_values_interval(mu = predict(m), sd = m$scale, -Inf, lod)
+  y_w_imputations <- ifelse(cens, imputations, y)
+  
+  return(y_w_imputations)
+}
+```
+
+```{r}
+#| fig-height: 8
+x_imp <- impute_tobit(df[['x_obs']], NULL, "1", df[['x_cens']], rep(df$lod_x[1], nrow(df)))
+y_imp <- impute_tobit(df[['y_obs']], NULL, "1", df[['y_cens']], rep(df$lod_y[1], nrow(df)))
+
+p1 <- bind_cols("x" = x_imp, "y" = y_imp) |> 
+  plot_bivariate_censoring(xlimit, ylimit, df$lod_x[1], df$lod_y[1]) +
+  geom_smooth(method = 'lm', color = '#DDAA33', se = FALSE) +
+  geom_smooth(data = dplyr::filter(df), method = 'lm', color = '#004488', se = FALSE) +
+  ggtitle(label = "Omit other variable in imputation")
+
+x_imp <- impute_tobit(df[['x_obs']], df |> select(y_obs), "1 + y_obs", df[['x_cens']], rep(df$lod_x[1], nrow(df)))
+y_imp <- impute_tobit(df[['y_obs']], df |> select(x_obs), "1 + x_obs", df[['y_cens']], rep(df$lod_y[1], nrow(df)))
+
+p2 <- bind_cols("x" = x_imp, "y" = y_imp) |> 
+  plot_bivariate_censoring(xlimit, ylimit, df$lod_x[1], df$lod_y[1]) +
+  geom_smooth(method = 'lm', color = '#DDAA33', se = FALSE) +
+  geom_smooth(data = dplyr::filter(df), method = 'lm', color = '#004488', se = FALSE) +
+  ggtitle(label = "Include partial observed variable in imputation other")
+
+library(patchwork)
+p1 / p2
+```
+I would say this imputation method -- where we do not take the other omic variables into account -- is common in 'assay wide association studies'. In these studies, they often want to relate each of the features to a phenotype one by one and as such their imputation does not need to take the other features from the assay into account. Predictably, if you were to relate features to each other using this imputation method, you would underestimate the slope because we did not directly model the relationship of the features. 
+
+Including the other partial observed variable in the imputation improves the estimation of the slope, but -- expectedly -- does not fully solve the issue either. It's much closer to the true slope than I expected though.
+
+## Optim routine 
+Just like we did for the univariate case in [a past blog post](/blog/left-censored-models-showcase/index.qmd), we can write down a likelihood and pass this to `optim` to optimize this function for this data. To recap, with censored Gaussian data we often use tobit models where the likelihood is a combination of the (1) probability density function for the fully observed observations and (2) the cumulative distribution function for the censored observations. But with a censored _predictor_, the likelihood becomes more complicated because now we also do not know the true value of a predictor. Therefore, our likelihood now consists of four different parts where each part reflects a different type of observation we have. We have (1) fully observed variables (2) observations censored due to LOD of $y$, (3) observations censored due to LOD of $x$, (4) observations censored due to LOD of $x$ and $y$. These correspond to the type of data outlined in the quadrants from the plots. 
+
+To construct a proper likelihood for the parts where the predictor is censored, we have to integrate over the _entire_ possible range of values for the predictor. We can only specify this integral if we -- contrary to standard (frequentist) regression models -- make an assumption about the distribution of this censored predictor. The censored predictor also comes at a computational cost because we need to evaluate its integral at each step of the optimization process (@lyles2017estimating @nie_marginal_2009).
+
+In math terms the likelihood then becomes:
+
+$$
+L_i= \begin{cases}\mathcal{N}\left(y_i ; a+b x_i, \sigma_y^2\right) \cdot \mathcal{N}\left(x_i ; \mu_x, \sigma_x^2\right) & \text { if } y_i>l_y \text { and } x_i>l_x & \text {(1)} \\ \Phi\left(\frac{l_y-\left(a+b x_i\right)}{\sigma_y}\right) \cdot \mathcal{N}\left(x_i ; \mu_x, \sigma_x^2\right) & \text { if } y_i \leq l_y \text { and } x_i>l_x & \text {(2)} \\ \int_{-\infty}^{l_x} \mathcal{N}\left(y_i ; a+b x, \sigma_y^2\right) \cdot \mathcal{N}\left(x ; \mu_x, \sigma_x^2\right) d x & \text { if } y_i>l_y \text { and } x_i \leq l_x & \text {(3)}\\ \int_{-\infty}^{l_x} \Phi\left(\frac{l_y-(a+b x)}{\sigma_y}\right) \cdot \mathcal{N}\left(x ; \mu_x, \sigma_x^2\right) d x  & \text { if } y_i \leq l_y \text { and } x_i \leq l_x & \text {(4)}\end{cases}
+$$
+where $\Phi$ is the cumulative density function, and $l$ describes the limit of detection for the variables. 
+
+In `R` we can implement this function as follows:
+
+```{r}
+#| code-fold: false
+bivariate_log_lik <- function(params, x_obs, y_obs, l_x, l_y) {
+  a <- params[1]
+  b <- params[2]
+  sigma_y <- params[3]
+  mu_x <- params[4]
+  sigma_x <- params[5]
+  
+  if (sigma_y <= 0 | sigma_x <= 0) {
+    return(-Inf) 
+  }
+  
+  ll <- numeric(length(x_obs))
+  for (i in 1:length(x_obs)) {
+    
+    # case 1: y uncensored, x uncensored
+    if (y_obs[i] > l_y && x_obs[i] > l_x) {
+      log_f_y_given_x <- dnorm(y_obs[i], mean = a + b * x_obs[i], sd = sigma_y, log = TRUE)
+      log_f_x <- dnorm(x_obs[i], mean = mu_x, sd = sigma_x, log = TRUE)
+      ll[i] <- log_f_y_given_x + log_f_x
+    }
+    
+    # case 2: y censored, x uncensored
+    else if (y_obs[i] <= l_y && x_obs[i] > l_x) {
+      log_p_y_cens <- pnorm((l_y - (a + b * x_obs[i])) / sigma_y, log.p = TRUE)
+      log_f_x <- dnorm(x_obs[i], mean = mu_x, sd = sigma_x, log = TRUE)
+      ll[i] <- log_p_y_cens + log_f_x
+    }
+    
+    # case 3: y uncensored, x censored -- censored predictor (requries integration)
+    else if (y_obs[i] > l_y && x_obs[i] <= l_x) {
+      integrand <- function(x) {
+        dnorm(y_obs[i], mean = a + b * x, sd = sigma_y) * dnorm(x, mean = mu_x, sd = sigma_x)
+      }
+      integral_val <- integrate(integrand, lower = -Inf, upper = l_x)$value
+      # avoid log(0)
+      ll[i] <- ifelse(integral_val > 0, log(integral_val), -Inf)
+    }
+    
+    # case 4: y censored, x censored -- censored predictor (requries integration)
+    else { # (y_obs[i] <= l_y && x_obs[i] <= l_x)
+      integrand <- function(x) {
+        pnorm((l_y - (a + b * x)) / sigma_y) * dnorm(x, mean = mu_x, sd = sigma_x)
+      }
+      integral_val <- integrate(integrand, lower = -Inf, upper = l_x)$value
+      ll[i] <- ifelse(integral_val > 0, log(integral_val), -Inf)
+    }
+  }
+  return(sum(ll))
+}
+```
+
+And evaluate it like:
+```{r}
+#| code-fold: false
+# initial coefficient based on regression on observed data
+run_optim <- function(df) {
+  init_mod <- lm(y_obs ~ x_obs, data = df)
+  init_a <- coef(init_mod)[[1]]
+  init_b <- coef(init_mod)[[2]]
+  init_sigma_y <- summary(init_mod)$sigma
+  init_mu_x <- mean(df$x_obs)
+  init_sigma_x <- sd(df$x_obs)
+  
+  initial_params <- c(init_a, init_b, init_sigma_y, init_mu_x, init_sigma_x)
+  names(initial_params) <- c("a", "b", "sigma_y", "mu_x", "sigma_x")
+  
+  fit <- optim(par = initial_params,
+               fn = bivariate_log_lik,
+               x_obs = df$x_obs,
+               y_obs = df$y_obs,
+               l_x = df$lod_x[1],
+               l_y = df$lod_y[1],
+               method = "BFGS",
+               control = list(fnscale = -1, maxit = 2000),
+               hessian = TRUE)
+  return(fit)
+}
+
+fit <- run_optim(df)
+fit$par
+```
+We see numbers similiar to the true values we set. We can also do some more formal significance testing by using the Hessian:
+
+```{r}
+#| code-fold: false
+hessian_matrix <- fit$hessian
+var_cov_matrix <- -solve(hessian_matrix)
+std_errors <- sqrt(diag(var_cov_matrix))
+z_values <- fit$par / std_errors
+p_values <- 2 * pnorm(abs(z_values), lower.tail = FALSE)
+
+fit$par |> 
+  tibble::enframe() |> 
+  bind_cols("std.error" = std_errors, "z-value" = z_values, "p.value" = p_values) |> 
+  knitr::kable(digits = 3)
+```
+
+Is this really unbiased though or is this just the luck of the draw? Let's randomly create a thousand of these datasets based on the parameters we set and fit the algorithm to each of these:
+
+```{r}
+library(purrr)
+run_experiment <- function(dummy) {
+  df <- gen_data(n, a, b, sigma_y, sigma_x, mu_x)
+  fit <- run_optim(df)
+  fit$par
+}
+
+furrr_options <- furrr::furrr_options(seed = seed)
+future::plan(future::multisession, workers = 32)
+
+all_results <- furrr::future_map(seq(1, 1000), run_experiment, .options = furrr_options)
+
+all_results |> 
+  map(tibble::enframe) |> 
+  list_rbind(names_to = "nr") |> 
+  inner_join(tibble(a, b, sigma_y, sigma_x, mu_x) |> tidyr::pivot_longer(everything(), values_to = "true_value")) |> 
+  mutate(diff = true_value - value) |> 
+  ggplot(aes(x = diff, y = name)) + 
+  geom_vline(xintercept = 0, linetype = 'dashed') +
+  ggdist::stat_halfeye() + 
+  labs(x = expression(theta - hat(theta)), y = "") +
+  theme_minimal()
+```
+Seems unbiased or very close to. Only the intercept seems ever so slightly underestimated for reasons unclear to me. The estimate of $X$ on $Y$ is spot on though![^1] However, extending this likelihood to >bivariate cases is hard. Namely, the number of possible observation types is $2^k$ where $k$ is the number of censored variables so now we need to account for these different density functions in the likelihood. Importantly, our likelihood will now contain multidimensional integrals: with three censored predictors we will have to solve a three-dimensional integral, moving to four will require a four-dimensional integral etc. This quickly adds up computationally. 
+
+[^1]: At least for the very simple situation I showcased here. I am not sure if this holds in other, potentially more complicated cases or how robust it is to misspecification. 
+
+Importantly, to make this approach useful in practice you will probably want to take other (confounding) variables into account too. In that case, you also need to model the mean of the censored variable as a function of these other covariates.
+
+The outlined `optim` approach seems most useful when we are interested in the effect of censored predictor(s) on a censored response. However, sometimes we are not explicitly interested in such an effect, but we still need to model the covariance of censored components. This is common in analyses of a (chemical) mixtures. Below I outline an imputation approach that is more helpful to that end. In addition it can easily be extended beyond the bivariate case. 
+
+## A 🐁🐁 routine
+Many of my imaginary readers are probably familiar with the `R` package `mice` (multiple imputation for chained equations). For those that aren't, `mice` allows you to specify a separate (conditional) model for each of the variables with missing values. These models then work iteratively: the algorithm imputes missing values for one variable, immediately incorporates these newly completed values into predictions for the next variable, and continues this chain until all missing values are filled. Then it fits a new model on this imputed data, imputes again, and so forth. Very much like a Gibbs sampler it breaks down a high-dimensional problem into a series of one-dimensional ones and then iteratively samples each parameter from its full conditional distribution (the distribution of that parameter given the data and the current values of all other parameters). As such this `mice` approach circumvents the nested integral problem from the explicit likelihood approach.
+
+In `mice` you can specify your own imputation model like below where we have adopted our tobit imputation approach from above for `mice`. Key are the `y`, `ry`, `x`, `wy` arguments that tell the `mice` internals what is what. 
+```{r}
+#| code-fold: false
+#' @param y vector with incomplete data
+#' @param ry logical vector indicating observed (TRUE) and missing (FALSE) values
+#' @param x matrix of predictors
+#' @param wy logical vector indicating which values to impute
+#' @param lod list of length y where y was left-censored
+#' @return vector of imputed values
+mice.impute.tobit <- function(y, ry, x, wy = NULL, lod = NULL, ...) {
+  # parent trick via 
+  # github.com/alexpkeil1/qgcomp/blob/2d0c995c0e5117f927ba775f6ee04901f678a7c7/R/base_extensions.R
+  whichvar <- eval(as.name("j"), parent.frame(n = 2))
+  nms <- names(eval(as.name("data"), parent.frame(n = 3)))
+  j <- which(nms == whichvar)
+  lod1 <- lod[[j]]
+  y1 <- y
+  y1[wy] <- lod1[wy]
+  
+  m <- survival::survreg(survival::Surv(y1, ry, type = 'left') ~ x, dist = "gaussian")
+  imputations <- draw_values_interval(mu = predict(m), sd = m$scale, -Inf, lod1)
+  imputations_1 <- imputations[wy]
+}
+
+library(mice)
+
+run_mice <- function(df) {
+  df_mice  <- df |> dplyr::mutate(x_obs = ifelse(x_cens, NA, x_obs), 
+                                  y_obs = ifelse(y_cens, NA, y_obs)) |> 
+    dplyr::select(x_obs, y_obs)
+  
+  miced <- mice::mice(data = df_mice,
+                      method = list("tobit", "tobit"),
+                      lod = list(rep(df$lod_x[1], n), rep(df$lod_y[1], n)),
+                      debug = FALSE,
+                      print = FALSE,
+                      m = 10,
+                      maxit = 10, seed = seed)
+}
+
+miced <- run_mice(df)
+```
+
+The estimate of the slope based on these imputations looks good:
+```{r}
+complete(miced, 2) |> 
+  rename_with(~stringr::str_remove(.x, "_obs")) |> 
+  plot_bivariate_censoring(xlimit, ylimit, df$lod_x[1], df$lod_y[1]) +
+  geom_smooth(method = 'lm', color = '#DDAA33', se = FALSE) +
+  geom_smooth(data = dplyr::filter(df), method = 'lm', color = '#004488', se = FALSE)
+```
+And formally we can also see that the estimates are close to what we specified.
+```{r}
+fit <- with(miced, lm(y_obs ~ 1 + x_obs))
+summary(pool(fit)) |> 
+  knitr::kable(digits = 3)
+```
+Running some simulations using the data parameters we set, it seems that this approach can also unbiasedly estimate the coefficient of the effect of $X$ on $Y$ when both are censored: 
+
+```{r}
+#| fig-height: 1.6
+run_experiment_mice <- function(dummy, mice.impute.tobit) {
+  df <- gen_data(n, a, b, sigma_y, sigma_x, mu_x)
+  mice.impute.tobit <- mice.impute.tobit
+  miced <- run_mice(df)
+  fit <- with(miced, lm(y_obs ~ 1 + x_obs))
+  summary(pool(fit))
+}
+
+furrr_options <- furrr::furrr_options(seed = seed)
+future::plan(future::multisession, workers = 32)
+
+all_results_mice <- furrr::future_map(seq(1, 1000), 
+                                      ~run_experiment_mice(.x, mice.impute.tobit), .options = furrr_options)
+all_results_mice |>
+  list_rbind(names_to = "nr") |>
+  inner_join(tibble("(Intercept)" = a, "x_obs" = b, sigma_y, sigma_x, mu_x) |> tidyr::pivot_longer(everything(), values_to = "true_value", names_to = "term")) |>
+  mutate(diff = true_value - estimate) |> 
+  mutate(term = case_match(term, "x_obs" ~ "b", "(Intercept)" ~ "a")) |> 
+  ggplot(aes(x = diff, y = term)) +
+  geom_vline(xintercept = 0, linetype = 'dashed') +
+  ggdist::stat_halfeye() +
+  labs(x = expression(theta - hat(theta)), y = "") +
+  theme_minimal()
+```
+The intercept looks to be even better estimated than before. Curious readers or future me can do more extensive simulations (with confounders, more censored predictors, misspecification, other distributions, varying proportion of nondetects etc.) to look into potential failure modes of the `mice` and the explicit likelihood based approach.
+
+Overall, I would say that this `mice` approach is by far the most practical because you can trivially extend it to more censored predictors or plugin other variables that suffer from missing data. Maybe it's not perfect in all scenarios, but from my experience the covariance between censored variables is often never taken into account at all and as such I think it's probably an improvement on the status quo.
+
+# Other challenges and other approaches
+There are still challenges though. For the univariate case of left-censored data I outlined an [approach to impute and remove technical variation](blog/impute-and-remove-technical-variation-metabolomics/index.html) in one at the same model and explained why that can be ideal for many analyses. It's not immediately obvious to me how you can translate that implementation to this bivariate (or multivariate) case. I suppose you can include the batch variables as predictor in the `mice` equations and include a post-processing step to remove the technical variation associated with the batch variable. I'm not sure if you need to modify some `mice` internals to do that elegantly or if that's possible out-of-the-box. Instead, t's probably more practical to work with a sequential batch-effect adjustment and imputation approach rather than the integrated approach.
+
+In general, extending the approach of bivariate censoring to multilevel models where we model observations from the same people or batch using random intercepts seems very hard. I haven't seen that in the literature and there's probably a very good reason for that. 
+
+While I have described some frequentist approaches to bivariate censoring, there are also Bayesian approaches of course. `brms` [does not support censored predictors](https://github.com/paul-buerkner/brms/issues/565) yet, so you probably need to use `STAN` to specify these models. The [excellent `STAN` manual](https://mc-stan.org/docs/2_36/stan-users-guide/truncation-censoring.html) or [this post from Benjamin Trueman](https://bentrueman.github.io/posts/2023-03-13-regression-models-with-censored-predictors/)[^3] can help you build such models. Ben Goodrich [his resources based on the GHK algorithm](https://groups.google.com/g/stan-users/c/GuWUJogum1o/m/LvxjlUBnBwAJ) and related discussions[^4][^5] are probably also useful to extent the bivariate censoring to the multivariate case (in a Bayesian framework). 
+
+[^3]: Ben also has a great blog post on [PCA with censored predictors](https://bentrueman.github.io/posts/2023-07-06-probabilistic-principal-component-analysis-for-censored-data/).
+[^4]: [https://discourse.mc-stan.org/t/multi-normal-lcdf/6652](https://discourse.mc-stan.org/t/multi-normal-lcdf/6652)
+[^5]: [https://discourse.mc-stan.org/t/censored-responses-multivariate-model/9772/3](https://discourse.mc-stan.org/t/censored-responses-multivariate-model/9772/3) 
+
+I have also seen papers from the HIV and aids literature that model survival time as a function of a censored predictor using [copulas](https://twiecki.io/blog/2018/05/03/copulas/). It would be interesting to apply that to this Gaussian censoring. See @nie_bias_2008, @romdhani_association_2011, @tran_measuring_2021 and @sun__aut_copulacenr_2024 for some of these Copula approaches to our type of bivariate censoring. Copulas may also be part of the default STAN library [someday](https://github.com/paul-buerkner/brms/issues/1317).
+
+```{r}
+#| echo: false
+session_info <- capture.output(sessionInfo())
+writeLines(session_info, "session_info.txt")
+```

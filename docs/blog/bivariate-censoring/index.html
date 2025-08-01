@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Max J. Oosterwegel">
+<meta name="dcterms.date" content="2025-07-30">
+
+<title>Fitting models to bivariate left-censored data – Max Oosterwegel – blog ( ._.)</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-046b0435a46a1ad11510a044160c444e.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-6ce58c7fb6e0ba74fffc6ff3b626125a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-fixed fullcontent quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-sm " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">home</span></a>
+  </li>  
+  <li class="nav-item">
+    <span class="nav-link">
+<span class="menu-text">paper roll</span>
+    </span>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">about</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:max[dot]oosterwegel[at-sign]gmail[dot]com"> <i class="bi bi-envelope-at-fill" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/moosterwegel"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Fitting models to bivariate left-censored data</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p><a href="https://maxoosterwegel.com/">Max J. Oosterwegel</a> <a href="https://orcid.org/0000-0003-3991-2632" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">July 30, 2025</p>
+    </div>
+  </div>
+  
+    
+    <div>
+    <div class="quarto-title-meta-heading">Doi</div>
+    <div class="quarto-title-meta-contents">
+      <p class="doi">
+        <a href="https://doi.org/placeholder">placeholder</a>
+      </p>
+    </div>
+  </div>
+  </div>
+  
+
+
+</header>
+
+
+<p>In past blog posts I have discussed the phenomenon of left-censored data that we often encounter when we work with biological assays. I discussed strategies to handle these data appropriately using maximum likelihood and Bayesian approaches. Moreover, I went over how to remove technical variation in such data. In this blog post, I will discuss situations where things get a little trickier because two (bivariate) or more (multivariate) variables are censored and you want to consider all of them in your statistical analysis.</p>
+<section id="an-illustration" class="level1">
+<h1>An illustration</h1>
+<p>Consider a common scenario: your biological assay measures two variables, and you want to analyze their correlation. This correlation may interest you directly, or you may need it to estimate covariance accurately for subsequent analyses. Both variables, however, contain nondetects – values below the limit of detection (LOD) whose exact measurements remain unknown. Below a visual depiction of such a scenario:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>seed <span class="ot">&lt;-</span> <span class="dv">2507</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(seed) </span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>a <span class="ot">&lt;-</span> <span class="fl">1.5</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>b <span class="ot">&lt;-</span> <span class="fl">2.0</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>sigma_y <span class="ot">&lt;-</span> <span class="fl">3.5</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>mu_x <span class="ot">&lt;-</span> <span class="dv">10</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>sigma_x <span class="ot">&lt;-</span> <span class="dv">3</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">500</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>gen_data <span class="ot">&lt;-</span> <span class="cf">function</span>(n, a, b, sigma_y, sigma_x, mu_x, <span class="at">prop_x =</span> <span class="fl">0.3</span>, <span class="at">prop_y =</span> <span class="fl">0.5</span>)  {</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n, mu_x, sigma_x)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">&lt;-</span> a <span class="sc">+</span> b <span class="sc">*</span> x <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="dv">0</span>, sigma_y)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  lod_y <span class="ot">&lt;-</span> <span class="fu">quantile</span>(y, prop_y, <span class="at">names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  lod_x <span class="ot">&lt;-</span> <span class="fu">quantile</span>(x, prop_x, <span class="at">names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  x_obs <span class="ot">&lt;-</span> <span class="fu">pmax</span>(lod_x, x)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  y_obs <span class="ot">&lt;-</span> <span class="fu">pmax</span>(lod_y, y)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(x, y, x_obs, y_obs, lod_x, lod_y) <span class="sc">|&gt;</span> </span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">x_cens =</span> x_obs <span class="sc">==</span> lod_x,</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>           <span class="at">y_cens =</span> y_obs <span class="sc">==</span> lod_y)</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(df)</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">gen_data</span>(n, a, b, sigma_y, sigma_x, mu_x)</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>x_limit <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">max</span>(df<span class="sc">$</span>x_obs) <span class="sc">*</span> <span class="fl">1.02</span>)</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>y_limit <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">max</span>(df<span class="sc">$</span>y_obs) <span class="sc">*</span> <span class="fl">1.02</span>)</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>plot_bivariate_censoring <span class="ot">&lt;-</span> <span class="cf">function</span>(df, xlimit, ylimit, lod_x, lod_y) {</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>  df <span class="sc">|&gt;</span> </span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y)) <span class="sc">+</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    <span class="fu">annotate</span>(<span class="st">"rect"</span>, <span class="at">xmin =</span> x_limit[<span class="dv">1</span>], <span class="at">xmax =</span> lod_x, <span class="at">ymin =</span> lod_y, <span class="at">ymax =</span> y_limit[<span class="dv">2</span>], <span class="at">fill =</span> <span class="st">"#dbdbdb"</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">annotate</span>(<span class="st">"rect"</span>, <span class="at">xmin =</span> x_limit[<span class="dv">1</span>], <span class="at">xmax =</span> lod_x, <span class="at">ymin =</span> x_limit[<span class="dv">1</span>], <span class="at">ymax =</span> lod_y, <span class="at">fill =</span> <span class="st">"#dbdbdb"</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    <span class="fu">annotate</span>(<span class="st">"rect"</span>, <span class="at">xmin =</span> lod_x, <span class="at">xmax =</span> x_limit[<span class="dv">2</span>], <span class="at">ymin =</span> x_limit[<span class="dv">1</span>], <span class="at">ymax =</span> lod_y, <span class="at">fill =</span> <span class="st">"#dbdbdb"</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">data =</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(df, x <span class="sc">&gt;</span> lod_x, y <span class="sc">&gt;</span> lod_y)) <span class="sc">+</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">data =</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(df, x <span class="sc">&lt;=</span> lod_x <span class="sc">|</span> y <span class="sc">&lt;=</span> lod_y), <span class="at">shape =</span> <span class="dv">5</span>) <span class="sc">+</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> lod_x, <span class="at">linetype =</span> <span class="st">'dashed'</span>) <span class="sc">+</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> lod_y, <span class="at">linetype =</span> <span class="st">'dashed'</span>) <span class="sc">+</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>    <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> lod_x <span class="sc">/</span> <span class="dv">2</span>, <span class="at">y =</span> (lod_y <span class="sc">+</span> y_limit[<span class="dv">2</span>]) <span class="sc">/</span> <span class="dv">2</span>, <span class="at">label =</span> <span class="st">"X censored, Y observed"</span>, <span class="at">size =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>    <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> lod_x <span class="sc">/</span> <span class="dv">2</span>, <span class="at">y =</span> lod_y <span class="sc">/</span> <span class="dv">2</span>, <span class="at">label =</span> <span class="st">"X censored, Y censored"</span>, <span class="at">size =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>    <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> (lod_x <span class="sc">+</span> x_limit[<span class="dv">2</span>]) <span class="sc">/</span> <span class="dv">2</span>, <span class="at">y =</span> lod_y <span class="sc">/</span> <span class="dv">2</span>, <span class="at">label =</span> <span class="st">"X observed, Y censored"</span>, <span class="at">size =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>    <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> x_limit[<span class="dv">2</span>], <span class="at">y =</span> lod_y, <span class="at">label =</span> <span class="st">"LOD of Y"</span>, <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.5</span>, <span class="at">hjust =</span> <span class="dv">1</span>, <span class="at">size =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>    <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> lod_x, <span class="at">y =</span> y_limit[<span class="dv">2</span>], <span class="at">label =</span> <span class="st">"LOD of X"</span>, <span class="at">vjust =</span> <span class="dv">1</span>, <span class="at">hjust =</span> <span class="sc">-</span><span class="fl">0.1</span>, <span class="at">size =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_cartesian</span>(<span class="at">xlim =</span> x_limit,</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>                    <span class="at">ylim =</span> y_limit,</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>                    <span class="at">expand =</span> <span class="cn">FALSE</span>, <span class="co"># prevent ggplot from adding extra space</span></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>                    <span class="at">clip =</span> <span class="st">'off'</span>) <span class="sc">+</span>   <span class="co"># allow the "LOD of Y" label to be drawn in the margin +</span></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"X"</span>, <span class="at">y =</span> <span class="st">"Y"</span>) <span class="sc">+</span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.line =</span> <span class="fu">element_line</span>(<span class="at">colour =</span> <span class="st">"black"</span>, <span class="at">linewidth =</span> <span class="fu">rel</span>(<span class="dv">1</span>)),</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>          <span class="at">panel.border =</span> <span class="fu">element_blank</span>())</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_bivariate_censoring</span>(df, xlimit, ylimit, df<span class="sc">$</span>lod_x[<span class="dv">1</span>], df<span class="sc">$</span>lod_y[<span class="dv">1</span>]) <span class="sc">+</span></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">data =</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(df, <span class="sc">!</span>x_cens, <span class="sc">!</span>y_cens), <span class="at">method =</span> <span class="st">'lm'</span>,  <span class="at">color =</span> <span class="st">'#DDAA33'</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">data =</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(df), <span class="at">method =</span> <span class="st">'lm'</span>, <span class="at">color =</span> <span class="st">'#004488'</span>, <span class="at">se =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Also drawn in this illustration are the <span style="color: #004488; font-weight: bold;">true</span> regression slope and the slope based on a <span style="color: #DDAA33; font-weight: bold;">complete</span> case analysis of the data. You can see that the <span style="color: #DDAA33; font-weight: bold;">estimated</span> slope is quite different from the <span style="color: #004488; font-weight: bold;">true</span> slope. so unfortunately we can’t simply do a complete case analysis with only the samples that were above the limit of detection as that will bias our estimate. Importantly, this also throws away valuable data.</p>
+<p>So what can we do? Unfortunately, as far as I’m aware there is no readily available statistical software that let’s us easily specify a model to accommodate this type of data. We need to come up with something ourselves. Let me walk through some of those manual options I have come across.</p>
+</section>
+<section id="possible-remedies" class="level1">
+<h1>Possible remedies</h1>
+<section id="impute-separately" class="level2">
+<h2 class="anchored" data-anchor-id="impute-separately">Impute separately</h2>
+<p>We have imputed left-censored data before by fitting a tobit model to the data and randomly drawing values below the limit of detection for our nondetects. What if we do that here?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># random sampling from a truncated normal variable via the cdf inversion method </span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># (also known as inverse transform sampling)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>draw_values_interval <span class="ot">&lt;-</span> <span class="cf">function</span>(mu, sd, start, end) {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># what percentiles belong to start value with these params</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  unif_lower <span class="ot">&lt;-</span> <span class="fu">pnorm</span>(start, mu, sd) </span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># what percentiles belong to end value with these params</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  unif_upper <span class="ot">&lt;-</span> <span class="fu">pnorm</span>(end,  mu, sd) </span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># draw random percentiles between lower and upper</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  rand_perc_interval <span class="ot">&lt;-</span> <span class="fu">runif</span>(<span class="fu">length</span>(mu),  unif_lower, unif_upper) </span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># get value belonging to percentile</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  drawn_values <span class="ot">&lt;-</span> <span class="fu">qnorm</span>(rand_perc_interval, mu, sd) </span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(drawn_values)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param y vector with incomplete data</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param ry logical vector indicating observed (TRUE) and missing (FALSE) values</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param x matrix of predictors</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param wy logical vector indicating which values to impute</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param lod list of length y where y was left-censored</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">#' @return vector of imputed values</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>impute_tobit <span class="ot">&lt;-</span> <span class="cf">function</span>(y, x, rhs_formula, <span class="at">cens =</span> <span class="cn">NULL</span>, <span class="at">lod =</span> <span class="cn">NULL</span>, ...) {</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  obs <span class="ot">&lt;-</span> <span class="sc">!</span>cens</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  y1 <span class="ot">&lt;-</span> y</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  y1[cens] <span class="ot">&lt;-</span> lod[cens]</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">bind_cols</span>(y1, obs, lod, cens, x)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  m <span class="ot">&lt;-</span> survival<span class="sc">::</span><span class="fu">survreg</span>(<span class="fu">as.formula</span>(</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    glue<span class="sc">::</span><span class="fu">glue</span>(<span class="st">"survival::Surv(y1, obs, type = 'left') ~ {rhs_formula}"</span>)), </span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>                         <span class="at">data =</span> df, <span class="at">dist =</span> <span class="st">"gaussian"</span>)</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>  imputations <span class="ot">&lt;-</span> <span class="fu">draw_values_interval</span>(<span class="at">mu =</span> <span class="fu">predict</span>(m), <span class="at">sd =</span> m<span class="sc">$</span>scale, <span class="sc">-</span><span class="cn">Inf</span>, lod)</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  y_w_imputations <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(cens, imputations, y)</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(y_w_imputations)</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>x_imp <span class="ot">&lt;-</span> <span class="fu">impute_tobit</span>(df[[<span class="st">'x_obs'</span>]], <span class="cn">NULL</span>, <span class="st">"1"</span>, df[[<span class="st">'x_cens'</span>]], <span class="fu">rep</span>(df<span class="sc">$</span>lod_x[<span class="dv">1</span>], <span class="fu">nrow</span>(df)))</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>y_imp <span class="ot">&lt;-</span> <span class="fu">impute_tobit</span>(df[[<span class="st">'y_obs'</span>]], <span class="cn">NULL</span>, <span class="st">"1"</span>, df[[<span class="st">'y_cens'</span>]], <span class="fu">rep</span>(df<span class="sc">$</span>lod_y[<span class="dv">1</span>], <span class="fu">nrow</span>(df)))</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">bind_cols</span>(<span class="st">"x"</span> <span class="ot">=</span> x_imp, <span class="st">"y"</span> <span class="ot">=</span> y_imp) <span class="sc">|&gt;</span> </span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_bivariate_censoring</span>(xlimit, ylimit, df<span class="sc">$</span>lod_x[<span class="dv">1</span>], df<span class="sc">$</span>lod_y[<span class="dv">1</span>]) <span class="sc">+</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">'lm'</span>, <span class="at">color =</span> <span class="st">'#DDAA33'</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">data =</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(df), <span class="at">method =</span> <span class="st">'lm'</span>, <span class="at">color =</span> <span class="st">'#004488'</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="at">label =</span> <span class="st">"Omit other variable in imputation"</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>x_imp <span class="ot">&lt;-</span> <span class="fu">impute_tobit</span>(df[[<span class="st">'x_obs'</span>]], df <span class="sc">|&gt;</span> <span class="fu">select</span>(y_obs), <span class="st">"1 + y_obs"</span>, df[[<span class="st">'x_cens'</span>]], <span class="fu">rep</span>(df<span class="sc">$</span>lod_x[<span class="dv">1</span>], <span class="fu">nrow</span>(df)))</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>y_imp <span class="ot">&lt;-</span> <span class="fu">impute_tobit</span>(df[[<span class="st">'y_obs'</span>]], df <span class="sc">|&gt;</span> <span class="fu">select</span>(x_obs), <span class="st">"1 + x_obs"</span>, df[[<span class="st">'y_cens'</span>]], <span class="fu">rep</span>(df<span class="sc">$</span>lod_y[<span class="dv">1</span>], <span class="fu">nrow</span>(df)))</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> <span class="fu">bind_cols</span>(<span class="st">"x"</span> <span class="ot">=</span> x_imp, <span class="st">"y"</span> <span class="ot">=</span> y_imp) <span class="sc">|&gt;</span> </span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_bivariate_censoring</span>(xlimit, ylimit, df<span class="sc">$</span>lod_x[<span class="dv">1</span>], df<span class="sc">$</span>lod_y[<span class="dv">1</span>]) <span class="sc">+</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">'lm'</span>, <span class="at">color =</span> <span class="st">'#DDAA33'</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">data =</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(df), <span class="at">method =</span> <span class="st">'lm'</span>, <span class="at">color =</span> <span class="st">'#004488'</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="at">label =</span> <span class="st">"Include partial observed variable in imputation other"</span>)</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>p1 <span class="sc">/</span> p2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>I would say this imputation method – where we do not take the other omic variables into account – is common in ‘assay wide association studies’. In these studies, they often want to relate each of the features to a phenotype one by one and as such their imputation does not need to take the other features from the assay into account. Predictably, if you were to relate features to each other using this imputation method, you would underestimate the slope because we did not directly model the relationship of the features.</p>
+<p>Including the other partial observed variable in the imputation improves the estimation of the slope, but – expectedly – does not fully solve the issue either. It’s much closer to the true slope than I expected though.</p>
+</section>
+<section id="optim-routine" class="level2">
+<h2 class="anchored" data-anchor-id="optim-routine">Optim routine</h2>
+<p>Just like we did for the univariate case in <a href="../../blog/left-censored-models-showcase/index.html">a past blog post</a>, we can write down a likelihood and pass this to <code>optim</code> to optimize this function for this data. To recap, with censored Gaussian data we often use tobit models where the likelihood is a combination of the (1) probability density function for the fully observed observations and (2) the cumulative distribution function for the censored observations. But with a censored <em>predictor</em>, the likelihood becomes more complicated because now we also do not know the true value of a predictor. Therefore, our likelihood now consists of four different parts where each part reflects a different type of observation we have. We have (1) fully observed variables (2) observations censored due to LOD of <span class="math inline">\(y\)</span>, (3) observations censored due to LOD of <span class="math inline">\(x\)</span>, (4) observations censored due to LOD of <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span>. These correspond to the type of data outlined in the quadrants from the plots.</p>
+<p>To construct a proper likelihood for the parts where the predictor is censored, we have to integrate over the <em>entire</em> possible range of values for the predictor. We can only specify this integral if we – contrary to standard (frequentist) regression models – make an assumption about the distribution of this censored predictor. The censored predictor also comes at a computational cost because we need to evaluate its integral at each step of the optimization process (<span class="citation" data-cites="lyles2017estimating">Lyles (<a href="#ref-lyles2017estimating" role="doc-biblioref">2017</a>)</span> <span class="citation" data-cites="nie_marginal_2009">L. Nie et al. (<a href="#ref-nie_marginal_2009" role="doc-biblioref">2009</a>)</span>).</p>
+<p>In math terms the likelihood then becomes:</p>
+<p><span class="math display">\[
+L_i= \begin{cases}\mathcal{N}\left(y_i ; a+b x_i, \sigma_y^2\right) \cdot \mathcal{N}\left(x_i ; \mu_x, \sigma_x^2\right) &amp; \text { if } y_i&gt;l_y \text { and } x_i&gt;l_x &amp; \text {(1)} \\ \Phi\left(\frac{l_y-\left(a+b x_i\right)}{\sigma_y}\right) \cdot \mathcal{N}\left(x_i ; \mu_x, \sigma_x^2\right) &amp; \text { if } y_i \leq l_y \text { and } x_i&gt;l_x &amp; \text {(2)} \\ \int_{-\infty}^{l_x} \mathcal{N}\left(y_i ; a+b x, \sigma_y^2\right) \cdot \mathcal{N}\left(x ; \mu_x, \sigma_x^2\right) d x &amp; \text { if } y_i&gt;l_y \text { and } x_i \leq l_x &amp; \text {(3)}\\ \int_{-\infty}^{l_x} \Phi\left(\frac{l_y-(a+b x)}{\sigma_y}\right) \cdot \mathcal{N}\left(x ; \mu_x, \sigma_x^2\right) d x  &amp; \text { if } y_i \leq l_y \text { and } x_i \leq l_x &amp; \text {(4)}\end{cases}
+\]</span> where <span class="math inline">\(\Phi\)</span> is the cumulative density function, and <span class="math inline">\(l\)</span> describes the limit of detection for the variables.</p>
+<p>In <code>R</code> we can implement this function as follows:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>bivariate_log_lik <span class="ot">&lt;-</span> <span class="cf">function</span>(params, x_obs, y_obs, l_x, l_y) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  a <span class="ot">&lt;-</span> params[<span class="dv">1</span>]</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  b <span class="ot">&lt;-</span> params[<span class="dv">2</span>]</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  sigma_y <span class="ot">&lt;-</span> params[<span class="dv">3</span>]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  mu_x <span class="ot">&lt;-</span> params[<span class="dv">4</span>]</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  sigma_x <span class="ot">&lt;-</span> params[<span class="dv">5</span>]</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (sigma_y <span class="sc">&lt;=</span> <span class="dv">0</span> <span class="sc">|</span> sigma_x <span class="sc">&lt;=</span> <span class="dv">0</span>) {</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="sc">-</span><span class="cn">Inf</span>) </span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  ll <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">length</span>(x_obs))</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(x_obs)) {</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># case 1: y uncensored, x uncensored</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (y_obs[i] <span class="sc">&gt;</span> l_y <span class="sc">&amp;&amp;</span> x_obs[i] <span class="sc">&gt;</span> l_x) {</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>      log_f_y_given_x <span class="ot">&lt;-</span> <span class="fu">dnorm</span>(y_obs[i], <span class="at">mean =</span> a <span class="sc">+</span> b <span class="sc">*</span> x_obs[i], <span class="at">sd =</span> sigma_y, <span class="at">log =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>      log_f_x <span class="ot">&lt;-</span> <span class="fu">dnorm</span>(x_obs[i], <span class="at">mean =</span> mu_x, <span class="at">sd =</span> sigma_x, <span class="at">log =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>      ll[i] <span class="ot">&lt;-</span> log_f_y_given_x <span class="sc">+</span> log_f_x</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="co"># case 2: y censored, x uncensored</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span> <span class="cf">if</span> (y_obs[i] <span class="sc">&lt;=</span> l_y <span class="sc">&amp;&amp;</span> x_obs[i] <span class="sc">&gt;</span> l_x) {</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>      log_p_y_cens <span class="ot">&lt;-</span> <span class="fu">pnorm</span>((l_y <span class="sc">-</span> (a <span class="sc">+</span> b <span class="sc">*</span> x_obs[i])) <span class="sc">/</span> sigma_y, <span class="at">log.p =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>      log_f_x <span class="ot">&lt;-</span> <span class="fu">dnorm</span>(x_obs[i], <span class="at">mean =</span> mu_x, <span class="at">sd =</span> sigma_x, <span class="at">log =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>      ll[i] <span class="ot">&lt;-</span> log_p_y_cens <span class="sc">+</span> log_f_x</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    <span class="co"># case 3: y uncensored, x censored -- censored predictor (requries integration)</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span> <span class="cf">if</span> (y_obs[i] <span class="sc">&gt;</span> l_y <span class="sc">&amp;&amp;</span> x_obs[i] <span class="sc">&lt;=</span> l_x) {</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>      integrand <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>        <span class="fu">dnorm</span>(y_obs[i], <span class="at">mean =</span> a <span class="sc">+</span> b <span class="sc">*</span> x, <span class="at">sd =</span> sigma_y) <span class="sc">*</span> <span class="fu">dnorm</span>(x, <span class="at">mean =</span> mu_x, <span class="at">sd =</span> sigma_x)</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>      integral_val <span class="ot">&lt;-</span> <span class="fu">integrate</span>(integrand, <span class="at">lower =</span> <span class="sc">-</span><span class="cn">Inf</span>, <span class="at">upper =</span> l_x)<span class="sc">$</span>value</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>      <span class="co"># avoid log(0)</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>      ll[i] <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(integral_val <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="fu">log</span>(integral_val), <span class="sc">-</span><span class="cn">Inf</span>)</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    <span class="co"># case 4: y censored, x censored -- censored predictor (requries integration)</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span> { <span class="co"># (y_obs[i] &lt;= l_y &amp;&amp; x_obs[i] &lt;= l_x)</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>      integrand <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>        <span class="fu">pnorm</span>((l_y <span class="sc">-</span> (a <span class="sc">+</span> b <span class="sc">*</span> x)) <span class="sc">/</span> sigma_y) <span class="sc">*</span> <span class="fu">dnorm</span>(x, <span class="at">mean =</span> mu_x, <span class="at">sd =</span> sigma_x)</span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>      integral_val <span class="ot">&lt;-</span> <span class="fu">integrate</span>(integrand, <span class="at">lower =</span> <span class="sc">-</span><span class="cn">Inf</span>, <span class="at">upper =</span> l_x)<span class="sc">$</span>value</span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>      ll[i] <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(integral_val <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="fu">log</span>(integral_val), <span class="sc">-</span><span class="cn">Inf</span>)</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">sum</span>(ll))</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And evaluate it like:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># initial coefficient based on regression on observed data</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>run_optim <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  init_mod <span class="ot">&lt;-</span> <span class="fu">lm</span>(y_obs <span class="sc">~</span> x_obs, <span class="at">data =</span> df)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  init_a <span class="ot">&lt;-</span> <span class="fu">coef</span>(init_mod)[[<span class="dv">1</span>]]</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  init_b <span class="ot">&lt;-</span> <span class="fu">coef</span>(init_mod)[[<span class="dv">2</span>]]</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  init_sigma_y <span class="ot">&lt;-</span> <span class="fu">summary</span>(init_mod)<span class="sc">$</span>sigma</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  init_mu_x <span class="ot">&lt;-</span> <span class="fu">mean</span>(df<span class="sc">$</span>x_obs)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  init_sigma_x <span class="ot">&lt;-</span> <span class="fu">sd</span>(df<span class="sc">$</span>x_obs)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  initial_params <span class="ot">&lt;-</span> <span class="fu">c</span>(init_a, init_b, init_sigma_y, init_mu_x, init_sigma_x)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(initial_params) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"sigma_y"</span>, <span class="st">"mu_x"</span>, <span class="st">"sigma_x"</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  fit <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">par =</span> initial_params,</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>               <span class="at">fn =</span> bivariate_log_lik,</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>               <span class="at">x_obs =</span> df<span class="sc">$</span>x_obs,</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>               <span class="at">y_obs =</span> df<span class="sc">$</span>y_obs,</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>               <span class="at">l_x =</span> df<span class="sc">$</span>lod_x[<span class="dv">1</span>],</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>               <span class="at">l_y =</span> df<span class="sc">$</span>lod_y[<span class="dv">1</span>],</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>               <span class="at">method =</span> <span class="st">"BFGS"</span>,</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>               <span class="at">control =</span> <span class="fu">list</span>(<span class="at">fnscale =</span> <span class="sc">-</span><span class="dv">1</span>, <span class="at">maxit =</span> <span class="dv">2000</span>),</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>               <span class="at">hessian =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(fit)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">run_optim</span>(df)</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>fit<span class="sc">$</span>par</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       a        b  sigma_y     mu_x  sigma_x 
+1.784635 1.977143 3.431141 9.823676 3.060019 </code></pre>
+</div>
+</div>
+<p>We see numbers similiar to the true values we set. We can also do some more formal significance testing by using the Hessian:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>hessian_matrix <span class="ot">&lt;-</span> fit<span class="sc">$</span>hessian</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>var_cov_matrix <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fu">solve</span>(hessian_matrix)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>std_errors <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">diag</span>(var_cov_matrix))</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>z_values <span class="ot">&lt;-</span> fit<span class="sc">$</span>par <span class="sc">/</span> std_errors</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>p_values <span class="ot">&lt;-</span> <span class="dv">2</span> <span class="sc">*</span> <span class="fu">pnorm</span>(<span class="fu">abs</span>(z_values), <span class="at">lower.tail =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>fit<span class="sc">$</span>par <span class="sc">|&gt;</span> </span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">enframe</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="st">"std.error"</span> <span class="ot">=</span> std_errors, <span class="st">"z-value"</span> <span class="ot">=</span> z_values, <span class="st">"p.value"</span> <span class="ot">=</span> p_values) <span class="sc">|&gt;</span> </span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">name</th>
+<th style="text-align: right;">value</th>
+<th style="text-align: right;">std.error</th>
+<th style="text-align: right;">z-value</th>
+<th style="text-align: right;">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">a</td>
+<td style="text-align: right;">1.785</td>
+<td style="text-align: right;">0.971</td>
+<td style="text-align: right;">1.837</td>
+<td style="text-align: right;">0.066</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">b</td>
+<td style="text-align: right;">1.977</td>
+<td style="text-align: right;">0.083</td>
+<td style="text-align: right;">23.799</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sigma_y</td>
+<td style="text-align: right;">3.431</td>
+<td style="text-align: right;">0.158</td>
+<td style="text-align: right;">21.689</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">mu_x</td>
+<td style="text-align: right;">9.824</td>
+<td style="text-align: right;">0.146</td>
+<td style="text-align: right;">67.455</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sigma_x</td>
+<td style="text-align: right;">3.060</td>
+<td style="text-align: right;">0.123</td>
+<td style="text-align: right;">24.885</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Is this really unbiased though or is this just the luck of the draw? Let’s randomly create a thousand of these datasets based on the parameters we set and fit the algorithm to each of these:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>run_experiment <span class="ot">&lt;-</span> <span class="cf">function</span>(dummy) {</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> <span class="fu">gen_data</span>(n, a, b, sigma_y, sigma_x, mu_x)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  fit <span class="ot">&lt;-</span> <span class="fu">run_optim</span>(df)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  fit<span class="sc">$</span>par</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>furrr_options <span class="ot">&lt;-</span> furrr<span class="sc">::</span><span class="fu">furrr_options</span>(<span class="at">seed =</span> seed)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>future<span class="sc">::</span><span class="fu">plan</span>(future<span class="sc">::</span>multisession, <span class="at">workers =</span> <span class="dv">32</span>)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>all_results <span class="ot">&lt;-</span> furrr<span class="sc">::</span><span class="fu">future_map</span>(<span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">1000</span>), run_experiment, <span class="at">.options =</span> furrr_options)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>all_results <span class="sc">|&gt;</span> </span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(tibble<span class="sc">::</span>enframe) <span class="sc">|&gt;</span> </span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list_rbind</span>(<span class="at">names_to =</span> <span class="st">"nr"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(<span class="fu">tibble</span>(a, b, sigma_y, sigma_x, mu_x) <span class="sc">|&gt;</span> tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="fu">everything</span>(), <span class="at">values_to =</span> <span class="st">"true_value"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">diff =</span> true_value <span class="sc">-</span> value) <span class="sc">|&gt;</span> </span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> diff, <span class="at">y =</span> name)) <span class="sc">+</span> </span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">'dashed'</span>) <span class="sc">+</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  ggdist<span class="sc">::</span><span class="fu">stat_halfeye</span>() <span class="sc">+</span> </span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">expression</span>(theta <span class="sc">-</span> <span class="fu">hat</span>(theta)), <span class="at">y =</span> <span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Seems unbiased or very close to. Only the intercept seems ever so slightly underestimated for reasons unclear to me. The estimate of <span class="math inline">\(X\)</span> on <span class="math inline">\(Y\)</span> is spot on though!<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> However, extending this likelihood to &gt;bivariate cases is hard. Namely, the number of possible observation types is <span class="math inline">\(2^k\)</span> where <span class="math inline">\(k\)</span> is the number of censored variables so now we need to account for these different density functions in the likelihood. Importantly, our likelihood will now contain multidimensional integrals: with three censored predictors we will have to solve a three-dimensional integral, moving to four will require a four-dimensional integral etc. This quickly adds up computationally.</p>
+<p>Importantly, to make this approach useful in practice you will probably want to take other (confounding) variables into account too. In that case, you also need to model the mean of the censored variable as a function of these other covariates.</p>
+<p>The outlined <code>optim</code> approach seems most useful when we are interested in the effect of censored predictor(s) on a censored response. However, sometimes we are not explicitly interested in such an effect, but we still need to model the covariance of censored components. This is common in analyses of a (chemical) mixtures. Below I outline an imputation approach that is more helpful to that end. In addition it can easily be extended beyond the bivariate case.</p>
+</section>
+<section id="a-routine" class="level2">
+<h2 class="anchored" data-anchor-id="a-routine">A 🐁🐁 routine</h2>
+<p>Many of my imaginary readers are probably familiar with the <code>R</code> package <code>mice</code> (multiple imputation for chained equations). For those that aren’t, <code>mice</code> allows you to specify a separate (conditional) model for each of the variables with missing values. These models then work iteratively: the algorithm imputes missing values for one variable, immediately incorporates these newly completed values into predictions for the next variable, and continues this chain until all missing values are filled. Then it fits a new model on this imputed data, imputes again, and so forth. Very much like a Gibbs sampler it breaks down a high-dimensional problem into a series of one-dimensional ones and then iteratively samples each parameter from its full conditional distribution (the distribution of that parameter given the data and the current values of all other parameters). As such this <code>mice</code> approach circumvents the nested integral problem from the explicit likelihood approach.</p>
+<p>In <code>mice</code> you can specify your own imputation model like below where we have adopted our tobit imputation approach from above for <code>mice</code>. Key are the <code>y</code>, <code>ry</code>, <code>x</code>, <code>wy</code> arguments that tell the <code>mice</code> internals what is what.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param y vector with incomplete data</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param ry logical vector indicating observed (TRUE) and missing (FALSE) values</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param x matrix of predictors</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param wy logical vector indicating which values to impute</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param lod list of length y where y was left-censored</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">#' @return vector of imputed values</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>mice.impute.tobit <span class="ot">&lt;-</span> <span class="cf">function</span>(y, ry, x, <span class="at">wy =</span> <span class="cn">NULL</span>, <span class="at">lod =</span> <span class="cn">NULL</span>, ...) {</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># parent trick via </span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># github.com/alexpkeil1/qgcomp/blob/2d0c995c0e5117f927ba775f6ee04901f678a7c7/R/base_extensions.R</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  whichvar <span class="ot">&lt;-</span> <span class="fu">eval</span>(<span class="fu">as.name</span>(<span class="st">"j"</span>), <span class="fu">parent.frame</span>(<span class="at">n =</span> <span class="dv">2</span>))</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  nms <span class="ot">&lt;-</span> <span class="fu">names</span>(<span class="fu">eval</span>(<span class="fu">as.name</span>(<span class="st">"data"</span>), <span class="fu">parent.frame</span>(<span class="at">n =</span> <span class="dv">3</span>)))</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  j <span class="ot">&lt;-</span> <span class="fu">which</span>(nms <span class="sc">==</span> whichvar)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  lod1 <span class="ot">&lt;-</span> lod[[j]]</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  y1 <span class="ot">&lt;-</span> y</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  y1[wy] <span class="ot">&lt;-</span> lod1[wy]</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  m <span class="ot">&lt;-</span> survival<span class="sc">::</span><span class="fu">survreg</span>(survival<span class="sc">::</span><span class="fu">Surv</span>(y1, ry, <span class="at">type =</span> <span class="st">'left'</span>) <span class="sc">~</span> x, <span class="at">dist =</span> <span class="st">"gaussian"</span>)</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  imputations <span class="ot">&lt;-</span> <span class="fu">draw_values_interval</span>(<span class="at">mu =</span> <span class="fu">predict</span>(m), <span class="at">sd =</span> m<span class="sc">$</span>scale, <span class="sc">-</span><span class="cn">Inf</span>, lod1)</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  imputations_1 <span class="ot">&lt;-</span> imputations[wy]</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mice)</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>run_mice <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>  df_mice  <span class="ot">&lt;-</span> df <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">x_obs =</span> <span class="fu">ifelse</span>(x_cens, <span class="cn">NA</span>, x_obs), </span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">y_obs =</span> <span class="fu">ifelse</span>(y_cens, <span class="cn">NA</span>, y_obs)) <span class="sc">|&gt;</span> </span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(x_obs, y_obs)</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  miced <span class="ot">&lt;-</span> mice<span class="sc">::</span><span class="fu">mice</span>(<span class="at">data =</span> df_mice,</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>                      <span class="at">method =</span> <span class="fu">list</span>(<span class="st">"tobit"</span>, <span class="st">"tobit"</span>),</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>                      <span class="at">lod =</span> <span class="fu">list</span>(<span class="fu">rep</span>(df<span class="sc">$</span>lod_x[<span class="dv">1</span>], n), <span class="fu">rep</span>(df<span class="sc">$</span>lod_y[<span class="dv">1</span>], n)),</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>                      <span class="at">debug =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>                      <span class="at">print =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>                      <span class="at">m =</span> <span class="dv">10</span>,</span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>                      <span class="at">maxit =</span> <span class="dv">10</span>, <span class="at">seed =</span> seed)</span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>miced <span class="ot">&lt;-</span> <span class="fu">run_mice</span>(df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The estimate of the slope based on these imputations looks good:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">complete</span>(miced, <span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_with</span>(<span class="sc">~</span>stringr<span class="sc">::</span><span class="fu">str_remove</span>(.x, <span class="st">"_obs"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_bivariate_censoring</span>(xlimit, ylimit, df<span class="sc">$</span>lod_x[<span class="dv">1</span>], df<span class="sc">$</span>lod_y[<span class="dv">1</span>]) <span class="sc">+</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">'lm'</span>, <span class="at">color =</span> <span class="st">'#DDAA33'</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">data =</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(df), <span class="at">method =</span> <span class="st">'lm'</span>, <span class="at">color =</span> <span class="st">'#004488'</span>, <span class="at">se =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>And formally we can also see that the estimates are close to what we specified.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">with</span>(miced, <span class="fu">lm</span>(y_obs <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> x_obs))</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">pool</span>(fit)) <span class="sc">|&gt;</span> </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">term</th>
+<th style="text-align: right;">estimate</th>
+<th style="text-align: right;">std.error</th>
+<th style="text-align: right;">statistic</th>
+<th style="text-align: right;">df</th>
+<th style="text-align: right;">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">(Intercept)</td>
+<td style="text-align: right;">1.755</td>
+<td style="text-align: right;">0.757</td>
+<td style="text-align: right;">2.319</td>
+<td style="text-align: right;">27.173</td>
+<td style="text-align: right;">0.028</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">x_obs</td>
+<td style="text-align: right;">1.981</td>
+<td style="text-align: right;">0.067</td>
+<td style="text-align: right;">29.594</td>
+<td style="text-align: right;">39.007</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Running some simulations using the data parameters we set, it seems that this approach can also unbiasedly estimate the coefficient of the effect of <span class="math inline">\(X\)</span> on <span class="math inline">\(Y\)</span> when both are censored:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>run_experiment_mice <span class="ot">&lt;-</span> <span class="cf">function</span>(dummy, mice.impute.tobit) {</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> <span class="fu">gen_data</span>(n, a, b, sigma_y, sigma_x, mu_x)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  mice.impute.tobit <span class="ot">&lt;-</span> mice.impute.tobit</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  miced <span class="ot">&lt;-</span> <span class="fu">run_mice</span>(df)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  fit <span class="ot">&lt;-</span> <span class="fu">with</span>(miced, <span class="fu">lm</span>(y_obs <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> x_obs))</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summary</span>(<span class="fu">pool</span>(fit))</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>furrr_options <span class="ot">&lt;-</span> furrr<span class="sc">::</span><span class="fu">furrr_options</span>(<span class="at">seed =</span> seed)</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>future<span class="sc">::</span><span class="fu">plan</span>(future<span class="sc">::</span>multisession, <span class="at">workers =</span> <span class="dv">32</span>)</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>all_results_mice <span class="ot">&lt;-</span> furrr<span class="sc">::</span><span class="fu">future_map</span>(<span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">1000</span>), </span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>                                      <span class="sc">~</span><span class="fu">run_experiment_mice</span>(.x, mice.impute.tobit), <span class="at">.options =</span> furrr_options)</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>all_results_mice <span class="sc">|&gt;</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list_rbind</span>(<span class="at">names_to =</span> <span class="st">"nr"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(<span class="fu">tibble</span>(<span class="st">"(Intercept)"</span> <span class="ot">=</span> a, <span class="st">"x_obs"</span> <span class="ot">=</span> b, sigma_y, sigma_x, mu_x) <span class="sc">|&gt;</span> tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="fu">everything</span>(), <span class="at">values_to =</span> <span class="st">"true_value"</span>, <span class="at">names_to =</span> <span class="st">"term"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">diff =</span> true_value <span class="sc">-</span> estimate) <span class="sc">|&gt;</span> </span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">term =</span> <span class="fu">case_match</span>(term, <span class="st">"x_obs"</span> <span class="sc">~</span> <span class="st">"b"</span>, <span class="st">"(Intercept)"</span> <span class="sc">~</span> <span class="st">"a"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> diff, <span class="at">y =</span> term)) <span class="sc">+</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">'dashed'</span>) <span class="sc">+</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>  ggdist<span class="sc">::</span><span class="fu">stat_halfeye</span>() <span class="sc">+</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">expression</span>(theta <span class="sc">-</span> <span class="fu">hat</span>(theta)), <span class="at">y =</span> <span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The intercept looks to be even better estimated than before. Curious readers or future me can do more extensive simulations (with confounders, more censored predictors, misspecification, other distributions, varying proportion of nondetects etc.) to look into potential failure modes of the <code>mice</code> and the explicit likelihood based approach.</p>
+<p>Overall, I would say that this <code>mice</code> approach is by far the most practical because you can trivially extend it to more censored predictors or plugin other variables that suffer from missing data. Maybe it’s not perfect in all scenarios, but from my experience the covariance between censored variables is often never taken into account at all and as such I think it’s probably an improvement on the status quo.</p>
+</section>
+</section>
+<section id="other-challenges-and-other-approaches" class="level1">
+<h1>Other challenges and other approaches</h1>
+<p>There are still challenges though. For the univariate case of left-censored data I outlined an <a href="blog/impute-and-remove-technical-variation-metabolomics/index.html">approach to impute and remove technical variation</a> in one at the same model and explained why that can be ideal for many analyses. It’s not immediately obvious to me how you can translate that implementation to this bivariate (or multivariate) case. I suppose you can include the batch variables as predictor in the <code>mice</code> equations and include a post-processing step to remove the technical variation associated with the batch variable. I’m not sure if you need to modify some <code>mice</code> internals to do that elegantly or if that’s possible out-of-the-box. Instead, t’s probably more practical to work with a sequential batch-effect adjustment and imputation approach rather than the integrated approach.</p>
+<p>In general, extending the approach of bivariate censoring to multilevel models where we model observations from the same people or batch using random intercepts seems very hard. I haven’t seen that in the literature and there’s probably a very good reason for that.</p>
+<p>While I have described some frequentist approaches to bivariate censoring, there are also Bayesian approaches of course. <code>brms</code> <a href="https://github.com/paul-buerkner/brms/issues/565">does not support censored predictors</a> yet, so you probably need to use <code>STAN</code> to specify these models. The <a href="https://mc-stan.org/docs/2_36/stan-users-guide/truncation-censoring.html">excellent <code>STAN</code> manual</a> or <a href="https://bentrueman.github.io/posts/2023-03-13-regression-models-with-censored-predictors/">this post from Benjamin Trueman</a><a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> can help you build such models. Ben Goodrich <a href="https://groups.google.com/g/stan-users/c/GuWUJogum1o/m/LvxjlUBnBwAJ">his resources based on the GHK algorithm</a> and related discussions<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a><a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> are probably also useful to extent the bivariate censoring to the multivariate case (in a Bayesian framework).</p>
+<p>I have also seen papers from the HIV and aids literature that model survival time as a function of a censored predictor using <a href="https://twiecki.io/blog/2018/05/03/copulas/">copulas</a>. It would be interesting to apply that to this Gaussian censoring. See <span class="citation" data-cites="nie_bias_2008">Lei Nie, Chu, and Korostyshevskiy (<a href="#ref-nie_bias_2008" role="doc-biblioref">2008</a>)</span>, <span class="citation" data-cites="romdhani_association_2011">Romdhani and Lakhal-Chaieb (<a href="#ref-romdhani_association_2011" role="doc-biblioref">2011</a>)</span>, <span class="citation" data-cites="tran_measuring_2021">Tran et al. (<a href="#ref-tran_measuring_2021" role="doc-biblioref">2021</a>)</span> and <span class="citation" data-cites="sun__aut_copulacenr_2024">Sun and Ding (<a href="#ref-sun__aut_copulacenr_2024" role="doc-biblioref">2024</a>)</span> for some of these Copula approaches to our type of bivariate censoring. Copulas may also be part of the default STAN library <a href="https://github.com/paul-buerkner/brms/issues/1317">someday</a>.</p>
+
+
+
+</section>
+
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-lyles2017estimating" class="csl-entry" role="listitem">
+Lyles, Robert H. 2017. <span>“Estimating Partial Correlations Between Logged HIV RNA Measurements Subject to Detection Limits.”</span> In <em>Quantitative Methods for HIV/AIDS Research</em>, 109–34. Chapman; Hall/CRC. <a href="https://doi.org/10.1201/9781315120805">https://doi.org/10.1201/9781315120805</a>.
+</div>
+<div id="ref-nie_marginal_2009" class="csl-entry" role="listitem">
+Nie, L., H. Chu, Y. Cheng, C. Spurney, K. Nagaraju, and J. Chen. 2009. <span>“Marginal and <span>Conditional</span> <span>Approaches</span> to <span>Multivariate</span> <span>Variables</span> <span>Subject</span> to <span>Limit</span> of <span>Detection</span>.”</span> <em>Journal of Biopharmaceutical Statistics</em> 19 (6): 1151–61. <a href="https://doi.org/10.1080/10543400903243033">https://doi.org/10.1080/10543400903243033</a>.
+</div>
+<div id="ref-nie_bias_2008" class="csl-entry" role="listitem">
+Nie, Lei, Haitao Chu, and Valeriy R. Korostyshevskiy. 2008. <span>“Bias Reduction for Nonparametric Correlation Coefficients Under the Bivariate Normal Copula Assumption with Known Detection Limits.”</span> <em>Canadian Journal of Statistics</em> 36 (3): 427–42. <a href="https://doi.org/10.1002/cjs.5550360307">https://doi.org/10.1002/cjs.5550360307</a>.
+</div>
+<div id="ref-romdhani_association_2011" class="csl-entry" role="listitem">
+Romdhani, Héla, and Lajmi Lakhal-Chaieb. 2011. <span>“On the Association Between Variables with Lower Detection Limits.”</span> <em>Statistics in Medicine</em> 30 (26): 3137–48. <a href="https://doi.org/10.1002/sim.4319">https://doi.org/10.1002/sim.4319</a>.
+</div>
+<div id="ref-sun__aut_copulacenr_2024" class="csl-entry" role="listitem">
+Sun, Tao, and Ying Ding. 2024. <span>“<span>CopulaCenR</span>: <span>Copula</span>-<span>Based</span> <span>Regression</span> <span>Models</span> for <span>Multivariate</span> <span>Censored</span> <span>Data</span>.”</span> <a href="https://doi.org/10.32614/CRAN.package.CopulaCenR">https://doi.org/10.32614/CRAN.package.CopulaCenR</a>.
+</div>
+<div id="ref-tran_measuring_2021" class="csl-entry" role="listitem">
+Tran, Thao M. P., Steven Abrams, Marc Aerts, Kirsten Maertens, and Niel Hens. 2021. <span>“Measuring Association Among Censored Antibody Titer Data.”</span> <em>Statistics in Medicine</em> 40 (16): 3740–61. <a href="https://doi.org/10.1002/sim.8995">https://doi.org/10.1002/sim.8995</a>.
+</div>
+</div></section><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1"><p>At least for the very simple situation I showcased here. I am not sure if this holds in other, potentially more complicated cases or how robust it is to misspecification.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>Ben also has a great blog post on <a href="https://bentrueman.github.io/posts/2023-07-06-probabilistic-principal-component-analysis-for-censored-data/">PCA with censored predictors</a>.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://discourse.mc-stan.org/t/multi-normal-lcdf/6652">https://discourse.mc-stan.org/t/multi-normal-lcdf/6652</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://discourse.mc-stan.org/t/censored-responses-multivariate-model/9772/3">https://discourse.mc-stan.org/t/censored-responses-multivariate-model/9772/3</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section><section class="quarto-appendix-contents" id="quarto-citation"><h2 class="anchored quarto-appendix-heading">Citation</h2><div><div class="quarto-appendix-secondary-label">BibTeX citation:</div><pre class="sourceCode code-with-copy quarto-appendix-bibtex"><code class="sourceCode bibtex">@online{oosterwegel2025,
+  author = {Oosterwegel, Max J.},
+  title = {Fitting Models to Bivariate Left-Censored Data},
+  date = {2025-07-30},
+  url = {https://maxoosterwegel.com/blog/bivariate-censoring/},
+  doi = {placeholder},
+  langid = {en}
+}
+</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-oosterwegel2025" class="csl-entry quarto-appendix-citeas" role="listitem">
+Oosterwegel, Max J. 2025. <span>“Fitting Models to Bivariate
+Left-Censored Data.”</span> July 30, 2025. <a href="https://doi.org/placeholder">https://doi.org/placeholder</a>.
+</div></div></section></div></main> <!-- /main -->
+<script data-goatcounter="https://maxoosterwegel.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/maxoosterwegel\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<script src="https://giscus.app/client.js" data-repo="moosterwegel/quarto-website" data-repo-id="R_kgDOOdS7PA" data-category="Announcements" data-category-id="DIC_kwDOOdS7PM4CpUdv" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="light">
+<input type="hidden" id="giscus-alt-theme" value="dark">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+    <a class="nav-link" href="../../index.xml">
+<p>RSS feed</p>
+</a>
+  </li>  
+    <li class="nav-item">
+ tepific-torpible-rigible-lucible-candible-honey-842240751607453
+  </li>  
+    <li class="nav-item">
+ © 2025 Max Oosterwegel
+  </li>  
+</ul>
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
