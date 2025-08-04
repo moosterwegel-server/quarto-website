@@ -1,0 +1,9 @@
+---
+title: "QR landing page: directing to..."
+format: html
+---
+
+```{=html}
+<meta http-equiv="refresh" content="0; url=/about.html">
+<link rel="canonical" href="/about.html">
+<p>If you are not redirected automatically, follow this <a href='[maxoosterwegel.com/about](maxoosterwegel.com/about)'>link</a>.</p>
