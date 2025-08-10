@@ -8,15 +8,17 @@ format:
       warning: false
       code-fold: true
       fig-height: 3
+execute: 
+  cache: true
 citation: true
 bibliography: references.bib
 ---
-Conditional logistic regression[^1] is a classic tool in an epidemiologist's toolkit. It's usually used to analyse matched case-control studies. However, popular methodological guidance has either explicitly advocated for 'breaking' the matching and using ordinary logistic models instead, or has sometimes been interpreted that way, with the justification being potential small precision gains (@pearce2016). In this blog post I want to demonstrate the advantages that conditional logistic regression can have in well-designed matched case-control studies of omic data that contain a substantial amount of technical variation.
+Conditional logistic regression[^1] is a classic tool in an epidemiologist's toolkit. It's usually used to analyse matched case-control studies. However, popular methodological guidance has either explicitly advocated for 'breaking' the matching and using ordinary logistic models instead (or has sometimes been interpreted that way) with the justification being potential small precision gains (@pearce2016). In this blog post, I want to demonstrate the advantages that conditional logistic regression can have in well-designed matched case-control studies of omic data that contain a substantial amount of technical variation.
 
 [^1]: In other fields also known as the [hypergeometric-normal model](https://www.metafor-project.org/doku.php/analyses), or as a ['fixed-effects logit model for panel data'](https://www.stata.com/manuals/rclogit.pdf).
 
 # The example study
-Let's consider the following hypothetical omics study. Cases are 1:1 matched to controls on important covariates. Crucially, the case-control pairs are then block randomized over the analytical assay. That is, the matched pairs (blocks) are randomized over the plates and batches, and within the block we randomize the position of the case or control. In visual form where the numbers correspond to the matched pair:
+Let's consider the following hypothetical omics study. Cases are 1:1 matched to controls on important covariates. Crucially, the case-control pairs are then block randomized over the analytical assay. That is, the matched pairs (blocks) are randomized over the plates and batches, and within the block we randomize the position of the case or control. These positions determine the processing order and when a sample gets, for example, injected into the machine for analysis. In visual form (where the numbers correspond to the matched pair, and we process from top to bottom, from left to right) this looks as follows:
 ```{r}
 #| fig-height: 4
 library(ggplate)
@@ -54,10 +56,10 @@ $$
 $$
 $\alpha_k$ represents the baseline log-odds of being a case that are specific to stratum $k$, capturing the effects of the matching factors and any other unmeasured matching set characteristics. $\beta$ represents the log-odds ratios for the predictors $x$, assumed to be constant across strata (@hosmer2013).
 
-This is somewhat feasible for large matching sets (i.e. many controls per case). However, such a fully stratified likelihood will need ($n/2 - 1$) extra parameters for 1:1 matched sets. This will lead to bias when using maximum likelihood because the number of parameters increases at the same rate as the sample size [see @breslow1980, section 7.1; also @hosmer2013, chap. 7]. 
+This is somewhat feasible for large matching sets (i.e. many controls per case). However, such a fully stratified likelihood will need ($n/2 - 1$) extra parameters for 1:1 matched sets. This will lead to bias when using maximum likelihood because the number of parameters increases at the same rate as the sample size [see @breslow1980, section 7.1; also @hosmer2013, chap. 7].
 
 ## Unconditional logistic regression: breaking matching
-Because of this bias, unconditional logistic regression with dummy variables is rarely used in epidemiology. More common is an unconditional logistic regression where the matching set indicators are not explicitly modeled. Instead, the matching is broken and the variables that were used for matching are added as predictor to the logistic model. Matched sets indicators are thus omitted. This approach also utilizes contrasts between matched pairs and pairs with only a control or case in it still contribute to the analysis. 
+Because of this bias, unconditional logistic regression with dummy variables is rarely used in epidemiology. More common is an unconditional logistic regression where the matching set indicators are not explicitly modeled. Instead, the matching is broken and the variables that were used for matching are added as predictor to the logistic model. Matched sets indicators are thus omitted. This approach also uses contrasts between matched pairs. Importantly, with unconditional logistic regression, pairs that consist of only one member (because either the case or control did not yield data) can still contribute information to the analysis. 
 
 ## Conditional logistic regression
 Another approach is conditional logistic regression (CLR). Instead of trying to estimate the potentially numerous stratum-specific intercepts ($\alpha_k$) from the dummy variable model, CLR treats them as nuisance parameters and disregards their estimation such that we can use methods for conditional inference to create a likelihood function. After some derivation[^2], the conditional likelihood for the matched set $k$ looks as follows for a 1:1 matched study design:
@@ -67,9 +69,9 @@ Another approach is conditional logistic regression (CLR). Instead of trying to 
 $$
 l_k(\boldsymbol{\beta})=\frac{\mathrm{e}^{\beta^{\prime} \mathbf{x}_{1 k}}}{\mathrm{e}^{\beta^{\prime} \mathbf{x}_{1 k}}+\mathrm{e}^{\beta^{\prime} \mathbf{x}_{0 k}}} .
 $$
-Where $x_1$ and $x_0$ correspond to the data from the case and control of a matched set $k$ respectively, and $\beta$ is the only unknown parameter (your exposure for example). In other words, this conditional likelihood is the probability that, within matched set $k$, the case is in fact the case if we assume a stratum-specific logistic regression model. The full conditional likelihood can be obtained here by taking the product of the likelihoods for each matched set (or summing the log-likelihoods of course). 
+where $x_1$ and $x_0$ correspond to the data from the case and control of a matched set $k$ respectively, and $\beta$ is the only unknown parameter (your exposure for example). In other words, this conditional likelihood is the probability that, within matched set $k$, the case is in fact the case if we assume a stratum-specific logistic regression model. The full conditional likelihood can be obtained here by taking the product of the likelihoods for each matched set (or summing the log-likelihoods of course). 
 
-The important thing to remember for my argument is that -- [contrary to logistic regression where we break the matching -- the effect of a predictor is only measured relative to the values in its matched set rather than relative to all values of the predictor]{.underline} (@hosmer2013). In standard epidemiology training, this is expressed as 'only disconcordant pairs contribute information to the analysis'. This is also why such training mentions that you cannot analyse factors that were matched on -- these values are constant within a pair and this estimator is thus undefined. 
+The important thing to remember for my argument is that -- [contrary to logistic regression where we break the matching -- the effect of a predictor is only measured relative to the values in its matched set rather than relative to all values of the predictor]{.underline} (@hosmer2013). In standard epidemiology training, this is expressed as 'only disconcordant pairs contribute information to the analysis'. This is also why such training mentions that you cannot analyse factors that were matched on -- in these cases these values are constant within a pair and this estimator is thus undefined. 
 
 In `R` you can easily fit a CLR by writing `survival::clogit(is_case ~ 1 + survival::strata(pair) + x, data = df)`[^3].
 
@@ -111,14 +113,14 @@ df |>
                 log_x_adj = log(x1) - tech_var) |> 
   plot_feature('log_x_adj')
 ```
-Even though we did a pretty good job of eliminating the technical variation -- at least visually speaking -- I think that no matter how extensively we model and adjust for this variation, the remaining variation will be greater than the technical drift over just one position in the data. And this variation over one position is precisely the only (technical) variation that the CLR will utilize in our well designed example study. That is, in CLR we condition on the matched pair and both the case and control in the pair are approximately equally affected by the technical variation and this variation thus gets cancelled out. We have essentially matched on the technical variation. And in CLR these factors that are constant across a match set are adjusted away -- even the unobserved ones!  
+Even though we did a pretty good job of eliminating the technical variation -- at least visually speaking -- I think that no matter how extensively we model and adjust for this variation, the remaining variation will be greater than the technical drift over just one position in the data. And this variation over one position is precisely the only (technical) variation that the CLR will use in our well designed example study. That is, in CLR we condition on the matched pair and both the case and control in the pair are approximately equally affected by the technical variation and this variation thus gets cancelled out. We have essentially matched on the technical variation. And in CLR these factors that are constant across a match set are adjusted away -- even the unobserved ones!  
 
 # Caveats and other designs
 In this blog post, we saw that the key to dealing with technical variation in a case control design was (1) recognizing that technical variation over one position is likely minimal (relative to the total amount of technical variation) (2) recognizing that both measured and unmeasured factors in CLR are adjusted away (3) randomly locating a case and its control next to each other such that the technical variation would be minimal. 
 
-I think that all of this could be contingent on the total total amount of (exposure) variation in study, because sometimes contrasts between groups can be much larger than within groups and as such contribute more information to the analysis. I should probably run some simulations to check that (shouldn't we all?).
+I think that all of this could be contingent on the total total amount of (exposure) variation in study because sometimes contrasts between groups can be much larger than within groups and as such contribute more information to the analysis. The curious reader, or future me can run simulations to better understand under which conditions my claims make most sense.
 
-There are of course many other designs than case-control studies. The case-cohort design for example. I do not have experience with case-cohort designs, but I do know that they are gaining popularity in environmental epidemiological omics studies because they easily allow for secondary analyses contrary to case-control studies (@lin_proper_2009, @obrien_case_2022). I would be interested to know examples of similar clever designs that mitigate the impact of technical variation in those types of studies. 
+There are of course many other epidemiological study designs than case-control studies. The case-cohort design for example. I do not have experience with case-cohort designs, but I do know that they are gaining popularity in environmental epidemiological omics studies because they easily allow for secondary analyses contrary to case-control studies (@lin_proper_2009, @obrien_case_2022). I would be interested to know examples of similar clever designs that mitigate the impact of technical variation in those types of studies. 
 
 ```{r}
 #| echo: false

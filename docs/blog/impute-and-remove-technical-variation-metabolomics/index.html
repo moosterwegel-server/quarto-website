@@ -9,7 +9,7 @@
 <meta name="author" content="Max J. Oosterwegel">
 <meta name="dcterms.date" content="2025-04-28">
 
-<title>Imputing nondetects and removing technical variation in left-censored metabolomic data – Max Oosterwegel – blog ( ._.)</title>
+<title>Imputing nondetects and removing technical variation in left-censored metabolomic data – Max Oosterwegel – blog</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -157,11 +157,6 @@ window.Quarto = {
 <span class="menu-text">home</span></a>
   </li>  
   <li class="nav-item">
-    <span class="nav-link">
-<span class="menu-text">paper roll</span>
-    </span>
-  </li>  
-  <li class="nav-item">
     <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">about</span></a>
   </li>  
@@ -231,10 +226,10 @@ window.Quarto = {
 </header>
 
 
-<p>The field of environmental epidemiology has made significant investments in untargeted (also known as nontargeted) metabolomics over the past few years, to gain deeper insights into exposure levels, biological mechanisms, and their relationship to disease. These investments are starting to pay dividends by enabling larger studies, but this scale-up comes with its own challenges. With sample sizes growing substantially, processing all study samples in a single batch is no longer feasible, forcing analyses to span longer periods. These extended timeframes introduce greater variation in technical, non-biological factors that contaminate the data with unwanted variation. Additionally, as I’ve discussed in <a href="../..\blog-posts/left-censored-models-showcase/">a previous post</a>, this metabolomic data is often left-censored, creating further analytical challenges. In this post, I’ll share a method I developed that handles both the imputation of nondetects and the removal of technical variation in one and the same model<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
-<section id="technical-variation-in-untargetednontargeted-metabolomics" class="level1">
-<h1>Technical variation in untargeted/nontargeted metabolomics</h1>
-<p>To illustrate the model, I will start with simulating some left-censored data that contains batch and plate effects (an example of technical variation). In this model, the study samples are processed in (100-well) plates that are nested within the batches. A proportion of these values will be censored. The censoring point (limit of detection) will differ per batch:</p>
+<p>The field of environmental epidemiology has made significant investments in untargeted metabolomics<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> over the past few years, to gain deeper insights into exposure levels, biological mechanisms, and their relationship to disease. These investments are starting to pay dividends by enabling larger studies, but this scale-up comes with its own challenges. With sample sizes growing substantially, processing all study samples in a single batch is no longer feasible, forcing analyses to span longer periods. These extended timeframes introduce greater variation in technical, non-biological factors that contaminate the data with unwanted variation. Additionally, as I’ve discussed in <a href="../..\blog/left-censored-models-showcase/index.html">a previous post</a>, this metabolomic data is often left-censored, creating further analytical challenges. In this post, I’ll share a method I developed that handles both the imputation of nondetects and the removal of technical variation in one and the same model<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+<section id="technical-variation-in-untargeted-metabolomics" class="level1">
+<h1>Technical variation in untargeted metabolomics</h1>
+<p>To illustrate the model, I will start with simulating some left-censored data that contains batch and plate effects (examples of technical variation). In this model, the study samples are processed in (100-well) plates that are nested within the batches. A proportion of these values will be censored. The censoring point (limit of detection) will differ per batch (as I see in real world data):</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">2000</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>samples_p_batch <span class="ot">&lt;-</span> <span class="dv">400</span></span>
@@ -281,7 +276,7 @@ window.Quarto = {
 <!-- #   theme_minimal() + -->
 <!-- #   theme(legend.position = 'top') -->
 <!-- # ``` -->
-<p>The plot below shows the technical variation (the different colors correspond to different batches) and the left-censored nature of the (untargeted) metabolic data. The data is left-censored because our instruments don’t have unlimited sensitivity. Due to left-censoring (dashed line), we observe only part of the distribution. Without the variation introduced by the different batches and plates the distribution would be much narrower. It’s also interesting to see that you can have an apparent drift over time that’s just the consequence of random variation between batches.</p>
+<p>The plot below shows the technical variation (the different colors correspond to different batches) and the left-censored nature of the (untargeted) metabolic data. The data is left-censored because our instruments don’t have unlimited sensitivity. Due to left-censoring (dashed line), we observe only part of the distribution. Without the variation introduced by the different batches and plates the distribution would be much narrower. It’s also interesting to see that you can have an apparent drift over time that’s just the consequence of random variation between batches and not a separate linear trend.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -407,18 +402,14 @@ window.Quarto = {
 <section id="the-status-quo-of-imputation-and-technical-variation-adjustment" class="level1">
 <h1>The status quo of imputation and technical variation adjustment</h1>
 <p>As I tried to illustrate using these plots, technical variation and left-censoring due to limits of detection (LOD) can be significant hurdles in metabolomics analysis. Yet, read method sections in the literature, and you’ll often find they’re treated like an afterthought. If addressed at all, methods sections will often only briefly state: ‘batch effects were removed using ComBat’ (despite ComBat fundamentally ignoring the censored nature of data below the LOD) or ‘data was imputed using methods X or Y’ (referencing imputation techniques like those by <span class="citation" data-cites="lubin_2004">Lubin et al. (<a href="#ref-lubin_2004" role="doc-biblioref">2004</a>)</span>. or <span class="citation" data-cites="lazar_2016">Lazar et al. (<a href="#ref-lazar_2016" role="doc-biblioref">2016</a>)</span> which focus solely on left-censoring without inherently handling batch effects).</p>
-<p>Furthermore, these references to ‘foundational’ imputation methods (like those by <span class="citation" data-cites="lubin_2004">Lubin et al. (<a href="#ref-lubin_2004" role="doc-biblioref">2004</a>)</span> or <span class="citation" data-cites="lazar_2016">Lazar et al. (<a href="#ref-lazar_2016" role="doc-biblioref">2016</a>)</span>) typically lack specifics on the exact imputation model; they neither detail which variables were included in the current study’s imputation nor do the original papers offer clear guidance on which should be included (because it wasn’t the goal of those papers). However, this is important for the analyst and the reader to know, as imputation models and the models for the subsequent analysis need to be congenial – meaning the imputation must account for the relationships you intend to study later. The variables included in imputation can matter greatly!</p>
+<p>Furthermore, these references to ‘foundational’ imputation methods (like those by <span class="citation" data-cites="lubin_2004">Lubin et al. (<a href="#ref-lubin_2004" role="doc-biblioref">2004</a>)</span> or <span class="citation" data-cites="lazar_2016">Lazar et al. (<a href="#ref-lazar_2016" role="doc-biblioref">2016</a>)</span>) typically lack specifics on the exact imputation model; they neither detail which variables were included in the current study’s imputation nor do the original papers offer clear guidance on which should be included (because it wasn’t the goal of those papers). However, this is important for the analyst and the reader to know, as imputation models and the models for the subsequent analysis need to be <em>congenial</em> – meaning the imputation must account for the relationships you intend to study later. The variables included in imputation can matter greatly!</p>
 </section>
-<section id="why-a-unified-model-is-better" class="level1">
-<h1>Why a unified model is better</h1>
-<p>Moreover, I will argue that the imputation and technical variation adjustment is best done in one and the same model, because the technical variation and left-censoring are often intertwined. Namely, the same technical factors causing batch-to-batch (or plate-to-plate) shifts in metabolite levels can also influence instrument sensitivity or baseline noise, thereby changing the effective LOD for different batches. This means that you cannot obtain an unbiased estimate of the technical variation without modeling the left-censoring, or the left-censoring (imputes) without modeling the the technical variation.</p>
-<p>In other words, if you adjust for batch effects before imputation (e.g., using methods like ComBat that ignore censoring), you are applying adjustments to data that either contains arbitrary placeholders for non-detects (like LOD/2) or simply ignores the information that the true value is below a certain batch-specific threshold. This distorts the estimation of the batch effect itself. And the higher proportion of nondetects, the worse this bias can get.</p>
-<p>One might also consider a seemingly pragmatic two-step approach: first, perform multiple imputation using a model that accounts for batch-specific LODs and includes batch and plate effects (perhaps as fixed effects<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>); second, fit a separate mixed model to each imputed dataset to estimate and remove these batch effects. However, this sequential process introduces several statistical challenges compared to a unified model:</p>
-<ul>
-<li>Treating batch effects as fixed during imputation (often a limitation of available software for censored models) but then as random during the adjustment step creates a conceptual mismatch in how technical variation is modeled and removed.</li>
-<li>Estimating imputation parameters and batch effects sequentially can be less statistically efficient than a unified model where all parameters are estimated simultaneously, allowing information to be shared across all model components.</li>
-</ul>
-<p>Therefore, a unified model that simultaneously estimates the technical variation and performs the imputation using batch-specific LOD information is better able to obtain unbiased estimates of both the true underlying metabolite levels and the relationships with outcomes or exposures. The <code>brms</code> model presented below is a way to implement such a unified model. Importantly, such a model, or any model that attempts to identify and remove technical variation, is contingent on sound experimental design; only with sound experimental design can we say that in expectation the batches and plates should have the same mean. If you don’t randomize the positions of the samples, supposed technical variation may be real biological variation.</p>
+<section id="an-integrated-statistical-model-of-left-censoring-and-technical-variation" class="level1">
+<h1>An integrated statistical model (of left-censoring and technical variation)</h1>
+<p>Moreover, I will argue that the left-censored modeling (and subsequent imputation) and technical variation adjustment should be done in one and the same model because the technical variation and left-censoring are often intertwined. Namely, the same technical factors causing batch-to-batch (or plate-to-plate) shifts in metabolite levels can also influence instrument sensitivity or baseline noise, thereby changing the effective LOD for different batches. This means that you cannot obtain an unbiased estimate of the technical variation without modeling the left-censoring, or the left-censoring without modeling the the technical variation. The higher proportion of nondetects, the worse the bias can get.</p>
+<p>In other words, if you adjust for batch effects before imputation (e.g., using methods like ComBat that ignore censoring), you are applying adjustments to data that contains arbitrary placeholders for non-detects (like LOD/2). This distorts the estimation of the batch effect itself. If you impute your nondetects (using a statistical model) before removing possible batch effects, you need to take the batch effect into account to be in line with the observed data. At that point you may as well integrate them all together in one at the same model.</p>
+<p>The <code>brms</code> model presented below is a way to implement such a unified model. It models a left-censored outcome with a random intercept term for the batch, and plate, with the plate nested in the batch. For practical purposes, censored observations are assumed to be censored at the minimum detected value of a batch, but you may also model this as a random parameter. After fitting the model, we impute values below the (technical variation adjusted) limit of detection using the original formula specification. Subsequently, we subtract the technical variation from the data (observed values and imputed nondetects).</p>
+<p>Importantly, our model – or any model that attempts to identify and remove technical variation – is contingent on sound experimental design; only with sound experimental design can we say that in expectation the batches and plates should have the same (conditional) mean. If you don’t randomize the positions of the samples, supposed technical variation may be real biological variation. In practice, batches and plates are often not perfectly balanced – either by design or because of chance – our method can then easily include the variables that are required to obtain the same (conditional mean) across batches by including them in the formula specification. Hereby we avoid potentially removing variation not related to technical processes of the instrument.</p>
 </section>
 <section id="a-brms-model" class="level1">
 <h1>A {brms} model</h1>
@@ -444,17 +435,17 @@ Chain 3 Iteration: 1001 / 2000 [ 50%]  (Sampling)
 Chain 4 Iteration: 1000 / 2000 [ 50%]  (Warmup) 
 Chain 4 Iteration: 1001 / 2000 [ 50%]  (Sampling) 
 Chain 3 Iteration: 2000 / 2000 [100%]  (Sampling) 
-Chain 3 finished in 60.5 seconds.
+Chain 3 finished in 60.2 seconds.
 Chain 1 Iteration: 2000 / 2000 [100%]  (Sampling) 
-Chain 1 finished in 61.0 seconds.
+Chain 1 finished in 60.4 seconds.
 Chain 2 Iteration: 2000 / 2000 [100%]  (Sampling) 
-Chain 2 finished in 63.4 seconds.
+Chain 2 finished in 63.3 seconds.
 Chain 4 Iteration: 2000 / 2000 [100%]  (Sampling) 
-Chain 4 finished in 66.4 seconds.
+Chain 4 finished in 66.3 seconds.
 
 All 4 chains finished successfully.
-Mean chain execution time: 62.8 seconds.
-Total execution time: 66.6 seconds.</code></pre>
+Mean chain execution time: 62.5 seconds.
+Total execution time: 66.4 seconds.</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>total_nr_draws <span class="ot">&lt;-</span> brms<span class="sc">::</span><span class="fu">ndraws</span>(m) </span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>samples_to_draw <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">sample</span>(total_nr_draws, nr_imputations))</span>
@@ -476,7 +467,7 @@ Total execution time: 66.6 seconds.</code></pre>
 <span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  batch_effect <span class="ot">&lt;-</span> re_draws[, i]</span>
 <span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  lod_adjusted <span class="ot">&lt;-</span> df[[<span class="st">'log_lod'</span>]] <span class="sc">-</span> batch_effect</span>
 <span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="co"># draw values below lod</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="co"># draw values below lod (cdf inversion method)</span></span>
 <span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="do">## what percentiles belong to start with these params</span></span>
 <span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  unif_lower <span class="ot">&lt;-</span> <span class="fu">pnorm</span>(<span class="sc">-</span><span class="cn">Inf</span>, mu, sd)</span>
 <span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  unif_upper <span class="ot">&lt;-</span> <span class="fu">pnorm</span>(lod_adjusted,  mu, sd)</span>
@@ -492,7 +483,7 @@ Total execution time: 66.6 seconds.</code></pre>
 <span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>r <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">as_tibble</span>(imputed_sets)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Below we see that the model has indeed recovered the parameters of the data generating process. The imputations are based on these parameters.</p>
+<p>Below we see that the model has indeed recovered the parameters of the data generating process. The imputations below the LOD are based on these recovered parameters.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -506,27 +497,27 @@ Formula: log_y_obs | cens(left_cens) ~ 1 + x + (1 | batch_id/plate_nested_coding
 Multilevel Hyperparameters:
 ~batch_id (Number of levels: 5) 
               Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-sd(Intercept)     1.98      0.77     0.98     3.96 1.00     1647     1743
+sd(Intercept)     1.96      0.79     0.98     4.07 1.00     1671     2049
 
 ~batch_id:plate_nested_coding (Number of levels: 20) 
               Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-sd(Intercept)     0.60      0.13     0.41     0.89 1.00     1333     2191
+sd(Intercept)     0.60      0.12     0.41     0.89 1.00     1306     1809
 
 Regression Coefficients:
           Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-Intercept    11.49      0.86     9.80    13.26 1.00     1791     2050
-x             0.07      0.02     0.02     0.11 1.00     5030     2630
+Intercept    11.42      0.85     9.66    13.04 1.00     1576     1708
+x             0.07      0.02     0.02     0.11 1.00     5054     2497
 
 Further Distributional Parameters:
       Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-sigma     1.01      0.02     0.97     1.05 1.00     4824     2472
+sigma     1.01      0.02     0.97     1.05 1.00     5162     2790
 
 Draws were sampled using sample(hmc). For each parameter, Bulk_ESS
 and Tail_ESS are effective sample size measures, and Rhat is the potential
 scale reduction factor on split chains (at convergence, Rhat = 1).</code></pre>
 </div>
 </div>
-<p>Visually, we can plot one of the imputed sets, and we can see that it fits well with the ideal data distribution that has the technical variation removed and the nondetects imputed. We imputed multiple times to represent and capture the uncertainty around the exact value of the nondetects<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>. We can also see that some of the observed values are now under the the original limit of detection. This is because – according to our model – these observations would have been nondetects in a ‘usual’ batch. And vice versa, there are some nondetects that would have been observed in a ‘usual’ batch and are now above the original LOD.</p>
+<p>Visually, we can plot one of the imputed sets, and see that it fits well with the ideal data distribution that has the technical variation removed and the nondetects imputed. We imputed multiple times to represent and capture the uncertainty around the exact value of the nondetects<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>. We can also see that some of the observed values are now under the the original limit of detection. This is because – according to our model – these observations would have been nondetects in a ‘usual’ batch. And vice versa, there are some nondetects that would have been observed in a ‘usual’ batch and are now above the original LOD.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -595,15 +586,13 @@ scale reduction factor on split chains (at convergence, Rhat = 1).</code></pre>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="fu">starts_with</span>(<span class="st">'V'</span>)) <span class="sc">|&gt;</span> </span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(censored) <span class="sc">%&gt;%</span> </span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(inj_order <span class="sc">==</span> <span class="fu">sample</span>(<span class="fu">unique</span>(.<span class="sc">$</span>inj_order), <span class="dv">1</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="dv">1</span>, <span class="at">y =</span> value, <span class="at">fill =</span> censored)) <span class="sc">+</span> </span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  ggrain<span class="sc">::</span><span class="fu">geom_rain</span>(<span class="at">rain.side =</span> <span class="st">'r'</span>) <span class="sc">+</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  see<span class="sc">::</span><span class="fu">scale_fill_okabeito</span>(<span class="at">order =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)) <span class="sc">+</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">'Imputed value'</span>) <span class="sc">+</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">fill =</span> <span class="st">'none'</span>) <span class="sc">+</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.title.y =</span> <span class="fu">element_blank</span>(), </span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text.y =</span> <span class="fu">element_blank</span>(), <span class="at">axis.ticks.y =</span> <span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> value)) <span class="sc">+</span> </span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  ggdist<span class="sc">::</span><span class="fu">stat_dotsinterval</span>() <span class="sc">+</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">'Imputed value'</span>) <span class="sc">+</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">fill =</span> <span class="st">'none'</span>) <span class="sc">+</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.title.y =</span> <span class="fu">element_blank</span>(), </span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text.y =</span> <span class="fu">element_blank</span>(), <span class="at">axis.ticks.y =</span> <span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -614,15 +603,17 @@ scale reduction factor on split chains (at convergence, Rhat = 1).</code></pre>
 </div>
 </div>
 </section>
-<section id="implications" class="level1">
-<h1>Implications</h1>
-<p>Unfortunately, I think this intertwined nature of nondetects and batch effects also means that your technical variation adjustment needs to be bespoke; you cannot do this imputation and ‘denoising’ once for your dataset and be done with it (if you care to this degree about bias). In theory, you could build the richest possible imputation model (and thus technical variation removal model) that is congenial with the most complex analysis that you would like to do and be done with it. In practice, this would be very hard with the amount of times a dataset is reanalysed by different analysts and the near certainty of missing values for the other variables in a rich imputation model. It will be even harder to create an congenial dataset when a mixture is the topic of interest and the dataset contains many left-censored features, because you would need to impute in two variables simultaneously and there’s no (easy) way to fit a multivariate left-censored model <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>.</p>
-<p>One potential way around this intertwined nature may be using the pooled QC samples for the batch adjustment using some kind of LOESS fit across the injection order. However, (1) labs do not always deliver information on QCs (2) there are less QA samples than study samples and as such there’s less data to inform such a model (3) readily available LOESS models do not take left-censoring into account. More importantly, it also doesn’t easily incorporate other covariates in the adjustment process which risks removing real biological variation and potentially failing to capture that for example cases are more often censored. Such a LOESS approach also still separates batch correction from the imputation of study samples, failing to address this interdependence between batch-specific LODs and the imputation process itself.</p>
+<section id="challenges-and-solutions" class="level1">
+<h1>Challenges and solutions</h1>
+<p>In this exact approach to imputation and technical variation, your imputation and technical variation adjustment needs to be bespoke; you cannot do this imputation and ‘denoising’ once for your dataset and be done with it (if you care to this degree about bias). In theory, you could build the richest possible imputation model (and thus technical variation removal model) that is congenial with the most complex analysis that you would like to do and be done with it. In practice, this would be impossible for labs because they do not have (all) the covariate data, and it would be hard to do for data recipients with the amount of times a dataset is reanalysed by different analysts and the near certainty of missing values for the other variables in a rich imputation model<a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>. It will be even harder to create a congenial dataset when a mixture is the topic of interest and the dataset contains many left-censored features because you would need to impute in two variables simultaneously and it’s not trivial to fit a multivariate left-censored model<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>.</p>
+<p>One potential way around this intertwined nature may be using the pooled QC samples for the batch adjustment using some kind of LOESS fit across the injection order. However, (1) labs do not always deliver information on QCs (2) there are less QA samples than study samples and as such there’s less data to inform such a model (3) readily available LOESS models do not take left-censoring into account. More importantly, it also wouldn’t incorporate other covariates in the adjustment process which risks removing real biological variation and potentially failing to capture that – for example – cases are more often censored. Such a LOESS approach also still separates batch correction from the imputation of study samples, failing to address this interdependence between batch-specific LODs and the imputation process itself.</p>
+<p>Another way around this – that is potentially attractive to labs if they also want to provide a batch adjusted dataset – is to slightly change our approach. We still take the intertwined nature of nondetects and batch effects into account by fitting the same statistical model. But contrary to what I described before, we do not impute. We only remove the technical variation by subtracting the technical variation terms from the observed data. We leave the imputation to the analyst. That part will still be bespoke. But the analyst can now just focus on creating a congenial imputation model like they have probably done before for more common epidemiological data. They do not need to worry about the technical variation<a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>. They only need a <code>mice</code> implementation of the left-censored imputation model from <span class="citation" data-cites="lubin_2004">Lubin et al. (<a href="#ref-lubin_2004" role="doc-biblioref">2004</a>)</span> and they are ready to go! I think such a two-step approach is less elegant and maybe less statistically efficient but it meets a need of many labs and analysts and I think it’s a marked improvement over what they usually do.</p>
 </section>
 <section id="possible-extensions" class="level1">
 <h1>Possible extensions</h1>
-<p>Sometimes there’s also drift within a plate or a batch. One possible way to model this is by adding a random slope for injection order within a batch or plate. The code from above readily supports this, because the code assumes all the random effects are nuisance variation. Although, I think that such more complicated models are much harder to fit so you may want to represent this drift in another way. Maybe using some fixed effects<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> and then remove this from the imputations and adjustment manually using some <code>model.matrix()</code> operation.</p>
-<p>One final point that I want to make on these models, is on the assumption of a multiplicative error term – here made by the log transformation – in metabolomic data. It’s a useful model in the sense that it permits only positive values and it is in line with our idea of the data generation process. Namely, it is plausible that the true error structure arises from such a multiplicative process, because measured intensity/concentration can be thought of as a function of <em>duration of exposure</em> <span class="math inline">\(\times\)</span> <em>number of times exposed</em>. However, in a lognormal distribution the error is also smaller for smaller values. And this is of course opposite of the limit of detection idea. If the error were indeed smaller for smaller values there would be no limit of detection! I hope the multiple versions of the imputed dataset at least overcome this partially. <span class="citation" data-cites="senn2012ghosts">Senn, Holford, and Hockey (<a href="#ref-senn2012ghosts" role="doc-biblioref">2012</a>)</span> mention that realistic likelihood models could consider a complex mixture of true concentration and error measurement models, or model the mean and variance structures separately. While I always like to think about the ideal model, I think for large scale metabolomics where you often have to fit this model to thousands of features this is not feasible.</p>
+<p>Sometimes there’s also drift within a plate or a technical variation beyond the batch/plate effects described here. One possible way to model this is by adding a random slope for injection order within a batch or plate. The code from above readily supports this because the code assumes all the random effects are nuisance variation. However, you may want to represent this drift in another way because I think that such more complicated models are much harder to fit. You can consider using some fixed effects<a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> and then remove their effect using some <code>model.matrix()</code> operation (to keep the effect of variables like e.g.&nbsp;case).</p>
+<p>Besides the mean, the variance can be affected by the same processes that introduce technical variation in the mean of batches. We have not modeled that here, but ComBat for example, does model the impact of technical variation on the variance of the batches. We can also take that into account because <code>brms</code> <a href="https://cran.r-project.org/web/packages/brms/vignettes/brms_distreg.html">allows</a> you to model the variance as a function of variables. But I imagine that for fitting those models (at scale) you probably want to pool information on this variance parameter across many features in some some hierarchical model or empirical Bayes method (like ComBat).</p>
+<p>One final point that I want to make on these models, is on the assumption of a multiplicative error term – here made by the log transformation – in metabolomic data. It’s a useful model in the sense that it permits only positive values (on the original scale) and it is in line with our idea of the data generation process. Namely, it is plausible that the true error structure arises from such a multiplicative process, because measured intensity/concentration can be thought of as a function of <em>duration of exposure</em> <span class="math inline">\(\times\)</span> <em>number of times exposed</em>. However, in a lognormal distribution the error is also smaller for smaller values. And this is of course opposite of the limit of detection idea. If the error were indeed smaller for smaller values there would be no limit of detection! I hope the multiple versions of the imputed dataset at least overcome this partially. <span class="citation" data-cites="senn2012ghosts">Senn, Holford, and Hockey (<a href="#ref-senn2012ghosts" role="doc-biblioref">2012</a>)</span> mention that realistic likelihood models could consider a complex mixture of true concentration and error measurement models, or model the mean and variance structures separately. While I always like to think about the ideal model, I think for large scale metabolomics – where you often have to fit this model to thousands of features – this is not feasible.</p>
 <!-- " the measured concentration can be thought of as a function of *duration of exposure* $\times$ *number of times exposed*. So differences in measured concentrations of the same compound (i.e. the variation) arise because of differences in one (or both) of the terms of this formula. And as we can see this formula is a *product* of factors, logarithms tend to work better when data arises from such a multiplicative process." -->
 
 
@@ -643,11 +634,13 @@ Senn, Stephen, Nick Holford, and Hans Hockey. 2012. <span>“The Ghosts of Depar
 </div></section><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
 
 <ol>
-<li id="fn1"><p>If your research question pertains directly to the exposure or metabolite level itself – rather than its relationship as a predictor for an outcome – then imputation is not necessary of course, because you can directly use the fitted left-censored model.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn2"><p>Fast, robust, frequentist left-censored multilevel models are not really <a href="../..\blog-posts/left-censored-models-showcase/">possible/available</a>.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn1"><p>Also known as nontargeted.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>If your research question pertains directly to the exposure or metabolite level itself – rather than its relationship as a predictor for an outcome – then imputation is not necessary of course, because you can directly use the fitted left-censored model.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn3"><p>In discussions I get the sense that many people think that the goal of imputation in metabolomics is to get as close as possible to the value that we would have observed with unlimited instrument sensitivity. While that’s welcome, for valid downstream inference with censored data it’s more important to accurately represent the uncertainty associated with those unobserved values.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn4"><p>I think some kind of Gibbs sampler or some chained equation is the best we can do.<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn5"><p>I’m not sure what’s better (in this setup): a model with random slopes that possibly doesn’t fully converge or some 20 fixed effect interaction terms (with potentially some sparsity inducing horseshoe or LASSO priors). I guess putting (very) strong priors on the random slopes is the most logical option.<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p>Although <code>brms</code> seems to <a href="https://cran.r-project.org/web/packages/brms/vignettes/brms_missings.html">accommodate</a> this as well. This extension is left as an exercise to the reader.<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p>I think some kind of Gibbs sampler or some chained equation is the best we can do. Update: see <a href="../..\blog/bivariate-censoring/index.html">this blog post</a> on how to do this.<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p>Not many people worry about the technical variation anyhow – but now there’s also less <em>need</em> to.<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p>I’m not fully sure what’s better (in such a setup): a model with random slopes that possibly doesn’t fully converge or some 20 fixed effect interaction terms (with potentially some sparsity inducing horseshoe or LASSO priors). I guess putting (very) strong priors on the random slopes is the most logical option.<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section><section class="quarto-appendix-contents" id="quarto-citation"><h2 class="anchored quarto-appendix-heading">Citation</h2><div><div class="quarto-appendix-secondary-label">BibTeX citation:</div><pre class="sourceCode code-with-copy quarto-appendix-bibtex"><code class="sourceCode bibtex">@online{oosterwegel2025,
   author = {Oosterwegel, Max J.},

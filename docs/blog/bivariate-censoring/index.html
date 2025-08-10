@@ -9,7 +9,7 @@
 <meta name="author" content="Max J. Oosterwegel">
 <meta name="dcterms.date" content="2025-07-30">
 
-<title>Fitting models to bivariate left-censored data – Max Oosterwegel – blog ( ._.)</title>
+<title>Fitting models to bivariate left-censored data – Max Oosterwegel – blog</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -157,11 +157,6 @@ window.Quarto = {
 <span class="menu-text">home</span></a>
   </li>  
   <li class="nav-item">
-    <span class="nav-link">
-<span class="menu-text">paper roll</span>
-    </span>
-  </li>  
-  <li class="nav-item">
     <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">about</span></a>
   </li>  
@@ -231,10 +226,10 @@ window.Quarto = {
 </header>
 
 
-<p>In past blog posts I have discussed the phenomenon of left-censored data that we often encounter when we work with biological assays. I discussed strategies to handle these data appropriately using maximum likelihood and Bayesian approaches. Moreover, I went over how to remove technical variation in such data. In this blog post, I will discuss situations where things get a little trickier because two (bivariate) or more (multivariate) variables are censored and you want to consider all of them in your statistical analysis.</p>
+<p>In past blog posts, I have discussed the phenomenon of left-censored data that we often encounter when we work with quantitative assays. I discussed strategies to handle these data appropriately using maximum likelihood and Bayesian approaches. Moreover, I went over how to remove technical variation in such data. In this blog post, I will discuss situations where things get a little trickier because two (bivariate) or more (multivariate) variables are censored and you want to consider all of them in your statistical analysis.</p>
 <section id="an-illustration" class="level1">
 <h1>An illustration</h1>
-<p>Consider a common scenario: your biological assay measures two variables, and you want to analyze their correlation. This correlation may interest you directly, or you may need it to estimate covariance accurately for subsequent analyses. Both variables, however, contain nondetects – values below the limit of detection (LOD) whose exact measurements remain unknown. Below a visual depiction of such a scenario:</p>
+<p>Consider a common scenario: your assay measures two variables, and you want to analyze their correlation. This correlation may interest you directly, or you may need it to estimate covariance accurately for subsequent analyses. Both variables, however, contain nondetects – values below the limit of detection (LOD) whose exact measurements remain unknown. Below a visual depiction of such a scenario:</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -310,14 +305,14 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>Also drawn in this illustration are the <span style="color: #004488; font-weight: bold;">true</span> regression slope and the slope based on a <span style="color: #DDAA33; font-weight: bold;">complete</span> case analysis of the data. You can see that the <span style="color: #DDAA33; font-weight: bold;">estimated</span> slope is quite different from the <span style="color: #004488; font-weight: bold;">true</span> slope. so unfortunately we can’t simply do a complete case analysis with only the samples that were above the limit of detection as that will bias our estimate. Importantly, this also throws away valuable data.</p>
+<p>Also drawn in this illustration are the <span style="color: #004488; font-weight: bold;">true</span> regression slope and the slope based on a <span style="color: #DDAA33; font-weight: bold;">complete</span> case analysis of the data. You can see that the <span style="color: #DDAA33; font-weight: bold;">estimated</span> slope is quite different from the <span style="color: #004488; font-weight: bold;">true</span> slope so unfortunately we can’t simply do a complete case analysis with only the samples that were above the limit of detection as that will bias our estimate. Importantly, this also throws away valuable data.</p>
 <p>So what can we do? Unfortunately, as far as I’m aware there is no readily available statistical software that let’s us easily specify a model to accommodate this type of data. We need to come up with something ourselves. Let me walk through some of those manual options I have come across.</p>
 </section>
 <section id="possible-remedies" class="level1">
 <h1>Possible remedies</h1>
 <section id="impute-separately" class="level2">
 <h2 class="anchored" data-anchor-id="impute-separately">Impute separately</h2>
-<p>We have imputed left-censored data before by fitting a tobit model to the data and randomly drawing values below the limit of detection for our nondetects. What if we do that here?</p>
+<p>We have imputed left-censored data before (in another blog post) by fitting a tobit model to the data and randomly drawing values below the limit of detection for our nondetects. What if we do that here?</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># random sampling from a truncated normal variable via the cdf inversion method </span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># (also known as inverse transform sampling)</span></span>
@@ -388,7 +383,7 @@ window.Quarto = {
 </div>
 </div>
 <p>I would say this imputation method – where we do not take the other omic variables into account – is common in ‘assay wide association studies’. In these studies, they often want to relate each of the features to a phenotype one by one and as such their imputation does not need to take the other features from the assay into account. Predictably, if you were to relate features to each other using this imputation method, you would underestimate the slope because we did not directly model the relationship of the features.</p>
-<p>Including the other partial observed variable in the imputation improves the estimation of the slope, but – expectedly – does not fully solve the issue either. It’s much closer to the true slope than I expected though.</p>
+<p>Including the other partial observed variable in the imputation improves the estimation of the slope here, but – expectedly – does not fully solve the issue either. It’s much closer to the true slope than I expected though.</p>
 </section>
 <section id="optim-routine" class="level2">
 <h2 class="anchored" data-anchor-id="optim-routine">Optim routine</h2>
@@ -546,7 +541,7 @@ L_i= \begin{cases}\mathcal{N}\left(y_i ; a+b x_i, \sigma_y^2\right) \cdot \mathc
 </table>
 </div>
 </div>
-<p>Is this really unbiased though or is this just the luck of the draw? Let’s randomly create a thousand of these datasets based on the parameters we set and fit the algorithm to each of these:</p>
+<p>Is this really unbiased for this example though or is this just the luck of the draw? Let’s randomly create a thousand of these datasets based on the parameters we set and fit the algorithm to each of these:</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -581,9 +576,9 @@ L_i= \begin{cases}\mathcal{N}\left(y_i ; a+b x_i, \sigma_y^2\right) \cdot \mathc
 </div>
 </div>
 </div>
-<p>Seems unbiased or very close to. Only the intercept seems ever so slightly underestimated for reasons unclear to me. The estimate of <span class="math inline">\(X\)</span> on <span class="math inline">\(Y\)</span> is spot on though!<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> However, extending this likelihood to &gt;bivariate cases is hard. Namely, the number of possible observation types is <span class="math inline">\(2^k\)</span> where <span class="math inline">\(k\)</span> is the number of censored variables so now we need to account for these different density functions in the likelihood. Importantly, our likelihood will now contain multidimensional integrals: with three censored predictors we will have to solve a three-dimensional integral, moving to four will require a four-dimensional integral etc. This quickly adds up computationally.</p>
+<p>The estimation of the parameters seems unbiased or very close to for our case. Only the intercept seems ever so slightly underestimated for reasons unclear to me. The estimate of <span class="math inline">\(X\)</span> on <span class="math inline">\(Y\)</span> is spot on though!<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> However, extending this likelihood to &gt;bivariate cases is hard. Namely, the number of possible observation types is <span class="math inline">\(2^k\)</span> where <span class="math inline">\(k\)</span> is the number of censored variables and you need to account for these different density functions in the likelihood. Importantly, our likelihood will now contain multidimensional integrals: with three censored predictors we will have to solve a three-dimensional integral, moving to four will require a four-dimensional integral etc. This quickly adds up computationally.</p>
 <p>Importantly, to make this approach useful in practice you will probably want to take other (confounding) variables into account too. In that case, you also need to model the mean of the censored variable as a function of these other covariates.</p>
-<p>The outlined <code>optim</code> approach seems most useful when we are interested in the effect of censored predictor(s) on a censored response. However, sometimes we are not explicitly interested in such an effect, but we still need to model the covariance of censored components. This is common in analyses of a (chemical) mixtures. Below I outline an imputation approach that is more helpful to that end. In addition it can easily be extended beyond the bivariate case.</p>
+<p>The outlined <code>optim</code> approach seems most useful when we are interested in the effect of censored predictor(s) on a censored response or a simple correlation coefficient. However, sometimes we are not explicitly interested in such an effect or correlation, but we still need to model the covariance of censored variables. This is common in analyses of a (chemical) mixtures. Below I outline an imputation approach that is more helpful to that end. In addition, it can easily be extended beyond the bivariate case.</p>
 </section>
 <section id="a-routine" class="level2">
 <h2 class="anchored" data-anchor-id="a-routine">A 🐁🐁 routine</h2>
@@ -731,7 +726,7 @@ L_i= \begin{cases}\mathcal{N}\left(y_i ; a+b x_i, \sigma_y^2\right) \cdot \mathc
 <section id="other-challenges-and-other-approaches" class="level1">
 <h1>Other challenges and other approaches</h1>
 <p>There are still challenges though. For the univariate case of left-censored data I outlined an <a href="blog/impute-and-remove-technical-variation-metabolomics/index.html">approach to impute and remove technical variation</a> in one at the same model and explained why that can be ideal for many analyses. It’s not immediately obvious to me how you can translate that implementation to this bivariate (or multivariate) case. I suppose you can include the batch variables as predictor in the <code>mice</code> equations and include a post-processing step to remove the technical variation associated with the batch variable. I’m not sure if you need to modify some <code>mice</code> internals to do that elegantly or if that’s possible out-of-the-box. Instead, t’s probably more practical to work with a sequential batch-effect adjustment and imputation approach rather than the integrated approach.</p>
-<p>In general, extending the approach of bivariate censoring to multilevel models where we model observations from the same people or batch using random intercepts seems very hard. I haven’t seen that in the literature and there’s probably a very good reason for that.</p>
+<p>In general, extending the approach of bivariate censoring to multilevel models– where we model observations from the same person or batch using random intercepts – seems very hard. I haven’t seen that in the literature and there’s probably a very good reason for that.</p>
 <p>While I have described some frequentist approaches to bivariate censoring, there are also Bayesian approaches of course. <code>brms</code> <a href="https://github.com/paul-buerkner/brms/issues/565">does not support censored predictors</a> yet, so you probably need to use <code>STAN</code> to specify these models. The <a href="https://mc-stan.org/docs/2_36/stan-users-guide/truncation-censoring.html">excellent <code>STAN</code> manual</a> or <a href="https://bentrueman.github.io/posts/2023-03-13-regression-models-with-censored-predictors/">this post from Benjamin Trueman</a><a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> can help you build such models. Ben Goodrich <a href="https://groups.google.com/g/stan-users/c/GuWUJogum1o/m/LvxjlUBnBwAJ">his resources based on the GHK algorithm</a> and related discussions<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a><a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> are probably also useful to extent the bivariate censoring to the multivariate case (in a Bayesian framework).</p>
 <p>I have also seen papers from the HIV and aids literature that model survival time as a function of a censored predictor using <a href="https://twiecki.io/blog/2018/05/03/copulas/">copulas</a>. It would be interesting to apply that to this Gaussian censoring. See <span class="citation" data-cites="nie_bias_2008">Lei Nie, Chu, and Korostyshevskiy (<a href="#ref-nie_bias_2008" role="doc-biblioref">2008</a>)</span>, <span class="citation" data-cites="romdhani_association_2011">Romdhani and Lakhal-Chaieb (<a href="#ref-romdhani_association_2011" role="doc-biblioref">2011</a>)</span>, <span class="citation" data-cites="tran_measuring_2021">Tran et al. (<a href="#ref-tran_measuring_2021" role="doc-biblioref">2021</a>)</span> and <span class="citation" data-cites="sun__aut_copulacenr_2024">Sun and Ding (<a href="#ref-sun__aut_copulacenr_2024" role="doc-biblioref">2024</a>)</span> for some of these Copula approaches to our type of bivariate censoring. Copulas may also be part of the default STAN library <a href="https://github.com/paul-buerkner/brms/issues/1317">someday</a>.</p>
 

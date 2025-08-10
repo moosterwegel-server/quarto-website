@@ -5,10 +5,10 @@
       xmlns:dc="http://purl.org/dc/elements/1.1/" 
       version="2.0">
 <channel>
-<title>Max Oosterwegel -- blog ( ._.)</title>
+<title>Max Oosterwegel -- blog</title>
 <link>https://maxoosterwegel.com/</link>
 <atom:link href="https://maxoosterwegel.com/index.xml" rel="self" type="application/rss+xml"/>
-<description>Blog Max Oosterwegel ( ._.)</description>
+<description>Blog Max Oosterwegel</description>
 <generator>quarto-1.7.27</generator>
 <lastBuildDate>Tue, 29 Jul 2025 22:00:00 GMT</lastBuildDate>
 <item>
@@ -20,10 +20,10 @@
 
 
 
-<p>In past blog posts I have discussed the phenomenon of left-censored data that we often encounter when we work with biological assays. I discussed strategies to handle these data appropriately using maximum likelihood and Bayesian approaches. Moreover, I went over how to remove technical variation in such data. In this blog post, I will discuss situations where things get a little trickier because two (bivariate) or more (multivariate) variables are censored and you want to consider all of them in your statistical analysis.</p>
+<p>In past blog posts, I have discussed the phenomenon of left-censored data that we often encounter when we work with quantitative assays. I discussed strategies to handle these data appropriately using maximum likelihood and Bayesian approaches. Moreover, I went over how to remove technical variation in such data. In this blog post, I will discuss situations where things get a little trickier because two (bivariate) or more (multivariate) variables are censored and you want to consider all of them in your statistical analysis.</p>
 <section id="an-illustration" class="level1">
 <h1>An illustration</h1>
-<p>Consider a common scenario: your biological assay measures two variables, and you want to analyze their correlation. This correlation may interest you directly, or you may need it to estimate covariance accurately for subsequent analyses. Both variables, however, contain nondetects – values below the limit of detection (LOD) whose exact measurements remain unknown. Below a visual depiction of such a scenario:</p>
+<p>Consider a common scenario: your assay measures two variables, and you want to analyze their correlation. This correlation may interest you directly, or you may need it to estimate covariance accurately for subsequent analyses. Both variables, however, contain nondetects – values below the limit of detection (LOD) whose exact measurements remain unknown. Below a visual depiction of such a scenario:</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -645,14 +645,14 @@ font-style: inherit;">FALSE</span>)</span></code></pre></div>
 </div>
 </div>
 </div>
-<p>Also drawn in this illustration are the <span style="color: #004488; font-weight: bold;">true</span> regression slope and the slope based on a <span style="color: #DDAA33; font-weight: bold;">complete</span> case analysis of the data. You can see that the <span style="color: #DDAA33; font-weight: bold;">estimated</span> slope is quite different from the <span style="color: #004488; font-weight: bold;">true</span> slope. so unfortunately we can’t simply do a complete case analysis with only the samples that were above the limit of detection as that will bias our estimate. Importantly, this also throws away valuable data.</p>
+<p>Also drawn in this illustration are the <span style="color: #004488; font-weight: bold;">true</span> regression slope and the slope based on a <span style="color: #DDAA33; font-weight: bold;">complete</span> case analysis of the data. You can see that the <span style="color: #DDAA33; font-weight: bold;">estimated</span> slope is quite different from the <span style="color: #004488; font-weight: bold;">true</span> slope so unfortunately we can’t simply do a complete case analysis with only the samples that were above the limit of detection as that will bias our estimate. Importantly, this also throws away valuable data.</p>
 <p>So what can we do? Unfortunately, as far as I’m aware there is no readily available statistical software that let’s us easily specify a model to accommodate this type of data. We need to come up with something ourselves. Let me walk through some of those manual options I have come across.</p>
 </section>
 <section id="possible-remedies" class="level1">
 <h1>Possible remedies</h1>
 <section id="impute-separately" class="level2">
 <h2 class="anchored" data-anchor-id="impute-separately">Impute separately</h2>
-<p>We have imputed left-censored data before by fitting a tobit model to the data and randomly drawing values below the limit of detection for our nondetects. What if we do that here?</p>
+<p>We have imputed left-censored data before (in another blog post) by fitting a tobit model to the data and randomly drawing values below the limit of detection for our nondetects. What if we do that here?</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
@@ -1069,7 +1069,7 @@ font-style: inherit;">/</span> p2</span></code></pre></div>
 </div>
 </div>
 <p>I would say this imputation method – where we do not take the other omic variables into account – is common in ‘assay wide association studies’. In these studies, they often want to relate each of the features to a phenotype one by one and as such their imputation does not need to take the other features from the assay into account. Predictably, if you were to relate features to each other using this imputation method, you would underestimate the slope because we did not directly model the relationship of the features.</p>
-<p>Including the other partial observed variable in the imputation improves the estimation of the slope, but – expectedly – does not fully solve the issue either. It’s much closer to the true slope than I expected though.</p>
+<p>Including the other partial observed variable in the imputation improves the estimation of the slope here, but – expectedly – does not fully solve the issue either. It’s much closer to the true slope than I expected though.</p>
 </section>
 <section id="optim-routine" class="level2">
 <h2 class="anchored" data-anchor-id="optim-routine">Optim routine</h2>
@@ -1698,7 +1698,7 @@ font-style: inherit;">3</span>)</span></code></pre></div>
 </table>
 </div>
 </div>
-<p>Is this really unbiased though or is this just the luck of the draw? Let’s randomly create a thousand of these datasets based on the parameters we set and fit the algorithm to each of these:</p>
+<p>Is this really unbiased for this example though or is this just the luck of the draw? Let’s randomly create a thousand of these datasets based on the parameters we set and fit the algorithm to each of these:</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -1870,9 +1870,9 @@ font-style: inherit;">theme_minimal</span>()</span></code></pre></div>
 </div>
 </div>
 </div>
-<p>Seems unbiased or very close to. Only the intercept seems ever so slightly underestimated for reasons unclear to me. The estimate of <img src="https://latex.codecogs.com/png.latex?X"> on <img src="https://latex.codecogs.com/png.latex?Y"> is spot on though!<sup>1</sup> However, extending this likelihood to &gt;bivariate cases is hard. Namely, the number of possible observation types is <img src="https://latex.codecogs.com/png.latex?2%5Ek"> where <img src="https://latex.codecogs.com/png.latex?k"> is the number of censored variables so now we need to account for these different density functions in the likelihood. Importantly, our likelihood will now contain multidimensional integrals: with three censored predictors we will have to solve a three-dimensional integral, moving to four will require a four-dimensional integral etc. This quickly adds up computationally.</p>
+<p>The estimation of the parameters seems unbiased or very close to for our case. Only the intercept seems ever so slightly underestimated for reasons unclear to me. The estimate of <img src="https://latex.codecogs.com/png.latex?X"> on <img src="https://latex.codecogs.com/png.latex?Y"> is spot on though!<sup>1</sup> However, extending this likelihood to &gt;bivariate cases is hard. Namely, the number of possible observation types is <img src="https://latex.codecogs.com/png.latex?2%5Ek"> where <img src="https://latex.codecogs.com/png.latex?k"> is the number of censored variables and you need to account for these different density functions in the likelihood. Importantly, our likelihood will now contain multidimensional integrals: with three censored predictors we will have to solve a three-dimensional integral, moving to four will require a four-dimensional integral etc. This quickly adds up computationally.</p>
 <p>Importantly, to make this approach useful in practice you will probably want to take other (confounding) variables into account too. In that case, you also need to model the mean of the censored variable as a function of these other covariates.</p>
-<p>The outlined <code>optim</code> approach seems most useful when we are interested in the effect of censored predictor(s) on a censored response. However, sometimes we are not explicitly interested in such an effect, but we still need to model the covariance of censored components. This is common in analyses of a (chemical) mixtures. Below I outline an imputation approach that is more helpful to that end. In addition it can easily be extended beyond the bivariate case.</p>
+<p>The outlined <code>optim</code> approach seems most useful when we are interested in the effect of censored predictor(s) on a censored response or a simple correlation coefficient. However, sometimes we are not explicitly interested in such an effect or correlation, but we still need to model the covariance of censored variables. This is common in analyses of a (chemical) mixtures. Below I outline an imputation approach that is more helpful to that end. In addition, it can easily be extended beyond the bivariate case.</p>
 </section>
 <section id="a-routine" class="level2">
 <h2 class="anchored" data-anchor-id="a-routine">A 🐁🐁 routine</h2>
@@ -2489,7 +2489,7 @@ font-style: inherit;">theme_minimal</span>()</span></code></pre></div>
 <section id="other-challenges-and-other-approaches" class="level1">
 <h1>Other challenges and other approaches</h1>
 <p>There are still challenges though. For the univariate case of left-censored data I outlined an <a href="blog/impute-and-remove-technical-variation-metabolomics/index.html">approach to impute and remove technical variation</a> in one at the same model and explained why that can be ideal for many analyses. It’s not immediately obvious to me how you can translate that implementation to this bivariate (or multivariate) case. I suppose you can include the batch variables as predictor in the <code>mice</code> equations and include a post-processing step to remove the technical variation associated with the batch variable. I’m not sure if you need to modify some <code>mice</code> internals to do that elegantly or if that’s possible out-of-the-box. Instead, t’s probably more practical to work with a sequential batch-effect adjustment and imputation approach rather than the integrated approach.</p>
-<p>In general, extending the approach of bivariate censoring to multilevel models where we model observations from the same people or batch using random intercepts seems very hard. I haven’t seen that in the literature and there’s probably a very good reason for that.</p>
+<p>In general, extending the approach of bivariate censoring to multilevel models– where we model observations from the same person or batch using random intercepts – seems very hard. I haven’t seen that in the literature and there’s probably a very good reason for that.</p>
 <p>While I have described some frequentist approaches to bivariate censoring, there are also Bayesian approaches of course. <code>brms</code> <a href="https://github.com/paul-buerkner/brms/issues/565">does not support censored predictors</a> yet, so you probably need to use <code>STAN</code> to specify these models. The <a href="https://mc-stan.org/docs/2_36/stan-users-guide/truncation-censoring.html">excellent <code>STAN</code> manual</a> or <a href="https://bentrueman.github.io/posts/2023-03-13-regression-models-with-censored-predictors/">this post from Benjamin Trueman</a><sup>2</sup> can help you build such models. Ben Goodrich <a href="https://groups.google.com/g/stan-users/c/GuWUJogum1o/m/LvxjlUBnBwAJ">his resources based on the GHK algorithm</a> and related discussions<sup>3</sup><sup>4</sup> are probably also useful to extent the bivariate censoring to the multivariate case (in a Bayesian framework).</p>
 <p>I have also seen papers from the HIV and aids literature that model survival time as a function of a censored predictor using <a href="https://twiecki.io/blog/2018/05/03/copulas/">copulas</a>. It would be interesting to apply that to this Gaussian censoring. See <span class="citation" data-cites="nie_bias_2008">Lei Nie, Chu, and Korostyshevskiy (2008)</span>, <span class="citation" data-cites="romdhani_association_2011">Romdhani and Lakhal-Chaieb (2011)</span>, <span class="citation" data-cites="tran_measuring_2021">Tran et al. (2021)</span> and <span class="citation" data-cites="sun__aut_copulacenr_2024">Sun and Ding (2024)</span> for some of these Copula approaches to our type of bivariate censoring. Copulas may also be part of the default STAN library <a href="https://github.com/paul-buerkner/brms/issues/1317">someday</a>.</p>
 
@@ -2549,10 +2549,10 @@ Left-Censored Data.”</span> July 30, 2025. <a href="https://doi.org/placeholde
 
 
 
-<p>During my PhD, I have noticed that many people (and chatbots) apply a Bonferroni type of thinking to all multiple testing ‘problems’<sup>1</sup>. More tests inherently means much less power – the thinking goes. However, this heuristic is not useful for methods that control the false discovery rate (FDR) such as the Benjamin-Hochberg (BH) procedure. In this blog post, I will briefly show why this Bonferroni heuristic fails here and what a better heuristic of statistical power is in situations where you aim to control the FDR.</p>
+<p>During my PhD, I have noticed that many people (and chatbots) apply a Bonferroni type of thinking to all multiple testing ‘problems’<sup>1</sup>. More tests inherently means much less power – the thinking goes. However, this heuristic is not useful for methods that control the false discovery rate (FDR) such as the Benjamini-Hochberg (BH) procedure. In this blog post, I will briefly show why this Bonferroni heuristic fails here and what a better heuristic of statistical power is in situations where you aim to control the FDR.</p>
 <section id="quick-recap" class="level1">
 <h1>Quick recap</h1>
-<p>A quick recap for those of us who could use a refresher. The false discovery rate controls the expected proportion of false discoveries among all positives <sup>2</sup>. Whereas methods that control the family wise error rate (FWER) such as Bonferroni control the probability that at least one null hypothesis is falsely rejected<sup>3</sup>. Methods that control the FWER also automatically control the FDR. Especially when there are many false hypotheses FDR methods will be more powerful than FWER methods <span class="citation" data-cites="goeman_multiple_2014">(Goeman and Solari 2014)</span>.</p>
+<p>A quick recap for those of us who could use a refresher. The false discovery rate controls the expected proportion of false discoveries among all positives <sup>2</sup>, whereas methods that control the family wise error rate (FWER) such as Bonferroni control the probability that at least one null hypothesis is falsely rejected<sup>3</sup>. Methods that control the FWER also automatically control the FDR. Especially when there are many false hypotheses, FDR methods will be more powerful than FWER methods <span class="citation" data-cites="goeman_multiple_2014">(Goeman and Solari 2014)</span>.</p>
 <p>The Bonferroni method controls the FWER by simply dividing the alpha-level (<img src="https://latex.codecogs.com/png.latex?%5Calpha">) by the number of tests (<img src="https://latex.codecogs.com/png.latex?m">): by setting the significance threshold for each individual test to <img src="https://latex.codecogs.com/png.latex?%5Cfrac%7B%5Calpha%7D%7Bm%7D"> you ensure that the probability of an error on any single test is no more than <img src="https://latex.codecogs.com/png.latex?%5Cfrac%7B%5Calpha%7D%7Bm%7D">. You can also adjust the p-value instead of the alpha-level by multiplying the p-value by <img src="https://latex.codecogs.com/png.latex?m">.</p>
 <p>The BH procedure controls the FDR by the following procedure:</p>
 <ol type="1">
@@ -3767,12 +3767,12 @@ font-style: inherit;">columns =</span> reject)</span></code></pre></div>
 </div>
 <p>If we look at the FDR calculation in the table, we see that we initially perform a Bonferroni correction on the lowest rank, and with the number of tests <img src="https://latex.codecogs.com/png.latex?m"> in the nominator (<img src="https://latex.codecogs.com/png.latex?p%20%5Ctimes%20%5Cfrac%7Bm%7D%7Bk%7D">) we multiply by a bigger number resulting in higher p-values if <img src="https://latex.codecogs.com/png.latex?m"> is larger. So why is the number of tests still a bad heuristic for statistical power here?</p>
 <p>Well, in the step afterwards, we take the cumulative minimum to ensure monotonicity. This means that the final adjusted p-value for a given test is the smallest raw adjustment among all the tests with an equal or higher p-value.</p>
-<p>The impact of this is easiest to see if we have p-value repetitions like above (only possible with discrete tests but alas). While the first instance gets a raw adjustment of (<img src="https://latex.codecogs.com/png.latex?%5Cfrac%7Bm%7D%7B1%7D%20=%20m">), the last instance gets a more favorable adjustment of <img src="https://latex.codecogs.com/png.latex?%5Cfrac%7Bm%7D%7B4%7D"> and because of the cumulative minimum rule, all 4 of these identical p-values will ultimately be assigned the same, more favorable adjusted p-value – the one from the 4th instance. This shows that as the p-values become denser, the cumulative step ensures that groups of similar p-values are evaluated based on the most optimistic rank in their group – leading to a less harsh penalty of adding more tests than when you control the FWER using Bonferroni.</p>
+<p>The impact of this is easiest to see if we have p-value repetitions like above (only possible with discrete tests but alas). While the first instance gets a raw adjustment of (<img src="https://latex.codecogs.com/png.latex?%5Cfrac%7Bm%7D%7B1%7D%20=%20m">), the last instance gets a more favorable adjustment of <img src="https://latex.codecogs.com/png.latex?%5Cfrac%7Bm%7D%7B4%7D"> and because of the cumulative minimum rule, all four of these identical p-values will ultimately be assigned the same, more favorable adjusted p-value: the one from the fourth instance. This shows that as the p-values become denser, the cumulative step ensures that groups of similar p-values are evaluated based on the most optimistic rank in their group – leading to a less harsh penalty of adding more tests than when you control the FWER using Bonferroni.</p>
 </section>
 <section id="why-the-number-of-tests-is-a-bad-heuristic-a-visual-demonstration" class="level1 page-columns page-full">
 <h1>Why the number of tests is a bad heuristic: a visual demonstration</h1>
 <p>The FDR method is often also illustrated with rank plots or histograms of the p-values. And I think those plots illustrate best why the Bonferroni intuition does not quite work here. Beforehand it is crucial to know that when a null hypothesis is true, the p-values are uniformly distributed. And when the null hypothesis is false the p-values display a right skew. As such when your multiple testing set includes both true and false null hypotheses you will have a mixture of those distributions.</p>
-<p>In the interactive visualization below we plot the null and alternative hypotheses that we are testing. The alternative hypotheses are based on a Cohen’s <img src="https://latex.codecogs.com/png.latex?d"> of 0.15 in a study of size 250. You can change this effect size, the number of tests (<img src="https://latex.codecogs.com/png.latex?m">), the proportion of your tests where the null hypothesis is true (<img src="https://latex.codecogs.com/png.latex?%5Cpi_0">), and the level at which you control the FDR (<img src="https://latex.codecogs.com/png.latex?%5Calpha">) and see how the metrics like the statistical power changes based on changes in input.</p>
+<p>In the interactive visualization below we plot the null and alternative hypotheses that we are testing. The alternative hypotheses are based on a Cohen’s <img src="https://latex.codecogs.com/png.latex?d"> of 0.15 in a study of size 250. You can change this effect size, the number of tests (<img src="https://latex.codecogs.com/png.latex?m">), the proportion of your tests where the null hypothesis is true (<img src="https://latex.codecogs.com/png.latex?%5Cpi_0">), and the level at which you control the FDR (<img src="https://latex.codecogs.com/png.latex?%5Calpha">) and see how the metrics like the statistical power change based on changes in input.</p>
 <div class="column-page">
 <div class="cell">
 <details class="code-fold">
@@ -8814,13 +8814,13 @@ font-style: inherit;">;</span></span>
 </section>
 <section id="a-better-heuristic" class="level1">
 <h1>A better heuristic</h1>
-<p>Now, why is that? The visual illustration shows us that statistical power here is better described as a function of the <em>shape</em> of the p-value distribution, and this shape does not change when the number of tests changes! This shape only changes when the effect sizes of the alternative hypotheses changes, or if proportion of the tests where the null is true changes.</p>
+<p>Now, why is that? The visual illustration shows us that statistical power here is better described as a function of the <em>shape</em> of the p-value distribution, and this shape does not change when the number of tests changes! This shape only changes when the effect sizes of the alternative hypotheses change, or if proportion of the tests where the null is true changes.</p>
 <p>I think a better, more useful predictor of statistical power is therefore <u>your expectation about the ratio of true and false nulls in your tests, and the effect sizes you expect if the null is false</u>. True null hypotheses or false null hypotheses with small effects are very unlikely to give a small enough p-value to be rejected, and therefore the only effect of their inclusion is a worsening of the critical values of more promising hypotheses.</p>
-<p>Methods that slightly improve on the statistical power of the BH procedure (while still controlling the type I error rate) such as independent hypothesis weighting and stratified false discovery control, use the same logic (<span class="citation" data-cites="sun_stratified_2006">Sun et al. (2006)</span>, <span class="citation" data-cites="ignatiadis_covariate_2021">Ignatiadis and Huber (2021)</span>). Stratified false discovery control calculates the FDR separately per level of a factor and as long as the proportion of null hypotheses differ across the levels, its power will be greater than the BH procedure. Similarly, the independent hypothesis weighting method also uses a covariate (both continuous and categorical) that is informative of statistical properties of the hypothesis tests, but now automatically learns how to weigh the hypotheses such that power is optimized while still controlling the FDR.</p>
+<p>Methods that slightly improve on the statistical power of the BH procedure (while still controlling the type I error rate) such as independent hypothesis weighting and stratified false discovery control, use the same logic (<span class="citation" data-cites="sun_stratified_2006">Sun et al. (2006)</span>, <span class="citation" data-cites="ignatiadis_covariate_2021">Ignatiadis and Huber (2021)</span>). Stratified false discovery control, calculates the FDR separately per level of a factor and as long as the proportion of null hypotheses differ across the levels, its power will be greater than the BH procedure. Similarly, the independent hypothesis weighting method also uses a covariate (both continuous and categorical) that is informative of statistical properties of the hypothesis tests. However, this method automatically learns how to weigh the hypotheses such that power is optimized while still controlling the FDR.</p>
 </section>
 <section id="a-concluding-example" class="level1">
 <h1>A concluding example</h1>
-<p>In untargeted metabolomics, some compounds will break into fragments. This fragmentation will result in very strongly correlated features in your dataset – they come from the same source after all. Reducing the number of features by grouping/clustering these fragments (on retention time) is then often done, keeping only one feature per group. Depending on the platform this can reduce the number of features by more than a magnitude. While this clustering definitely makes sense from a data generation perspective, people should not expect the statistical power of their subsequent tests to majorly change, because the signal to noise ratio likely has not changed: we have reduced our signal and noise by the same factor! Improvements in power would come from reducing the noise by a bigger factor than the signal. This can be accomplished in many ways. Some examples include multivariate methods like PCA, removing technical variation from metabolomic data, or analyses that separately test more promising features.</p>
+<p>In untargeted metabolomics, some compounds will break into fragments. This fragmentation will result in very strongly correlated features in your dataset. This is no surprise; they come from the same source / molecule after all. Reducing the number of features by grouping/clustering these fragments (on retention time) is then often done, keeping only one feature per group. Depending on the platform this can reduce the number of features by more than a magnitude. While this clustering definitely makes sense from a data generation perspective, people should not expect the statistical power of their subsequent tests to majorly change because the signal to noise ratio likely has not changed. Namely, we have reduced our signal and noise by the same factor! Improvements in power would come from reducing the noise by a bigger factor than the signal. This can be accomplished in many ways. Some examples include multivariate methods like PCA, removing technical variation from metabolomic data, or analyses that separately test more promising features.</p>
 
 
 
@@ -8843,9 +8843,9 @@ Sun, Lei, Radu V. Craiu, Andrew D. Paterson, and Shelley B. Bull. 2006. <span>�
 </div></section><section id="footnotes" class="footnotes footnotes-end-of-document"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
 
 <ol>
-<li id="fn1"><p>I very much like the framing from Wolfgang Huber on the false discovery rate: not as a problem but as an opportunity to get an answer to a more interesting question than the p-value. Often scientists want to know the chance that they are later proven wrong. The p-value cannot give you this probability, but controlling the FDR with multiple testing does! <span class="citation" data-cites="huber_reporting_2019">(Huber 2019)</span>↩︎</p></li>
+<li id="fn1"><p>I very much like the framing from Wolfgang Huber on the false discovery rate: not as a problem but as an opportunity to get an answer to a more interesting question than the p-value. Often scientists want to know the chance that they are later proven wrong. The p-value cannot give you this probability, but controlling the FDR with multiple testing can! <span class="citation" data-cites="huber_reporting_2019">(Huber 2019)</span>↩︎</p></li>
 <li id="fn2"><p>The FDR represents an expectation value, not a guarantee for any single experiment. It measures the average proportion of false rejections we would observe across many (theoretical) replications of the same experiment. In contrast, the actual false discovery proportion (FDP) in any individual experiment may be substantially higher or lower than this expected rate.↩︎</p></li>
-<li id="fn3"><p>I am surprised by how often the Bonferroni correction is still used to control the family-wise error rate. I know this correction is simple and it is often covered in the few statistic classes many people take/get. But read the <a href="https://en.wikipedia.org/wiki/Bonferroni_correction">Wikipedia entry</a> or the 11 sentences of the <a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/p.adjust.html">p.adjust documentation in R</a> and you will learn that Holm’s method dominates the Bonferroni without making any additional assumptions and is statistically thus always preferred. A shame that we leave such improvements on the table (although the difference most notable when proportion of false hypotheses is large <span class="citation" data-cites="goeman_multiple_2014">(Goeman and Solari 2014)</span>).↩︎</p></li>
+<li id="fn3"><p>I am surprised by how often the Bonferroni correction is still used to control the family-wise error rate. I know this correction is simple and it is often covered in the few statistic classes many people take. But read the <a href="https://en.wikipedia.org/wiki/Bonferroni_correction">Wikipedia entry</a> or the 11 sentences of the <a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/p.adjust.html">p.adjust documentation in R</a> and you will learn that Holm’s method dominates the Bonferroni without making any additional assumptions and is – statistically – thus always preferred. A shame that we leave such improvements on the table (although the difference most notable when proportion of false hypotheses is large <span class="citation" data-cites="goeman_multiple_2014">(Goeman and Solari 2014)</span>).↩︎</p></li>
 <li id="fn4"><p>The original BH procedure did not <a href="https://stats.stackexchange.com/a/287199">include</a> ‘adjusted’ p-values. The calculation I present yields identical results to their procedure and is (in my opinion) easier to follow. <code>p.adjust</code> also follows this calculation.↩︎</p></li>
 </ol>
 </section><section class="quarto-appendix-contents" id="quarto-citation"><h2 class="anchored quarto-appendix-heading">Citation</h2><div><div class="quarto-appendix-secondary-label">BibTeX citation:</div><pre class="sourceCode code-with-copy quarto-appendix-bibtex"><code class="sourceCode bibtex">@online{oosterwegel2025,
@@ -8874,10 +8874,10 @@ Won’t Increase Your Power When You Control the FDR.”</span> July 18,
 
 
 
-<p>Conditional logistic regression<sup>1</sup> is a classic tool in an epidemiologist’s toolkit. It’s usually used to analyse matched case-control studies. However, popular methodological guidance has either explicitly advocated for ‘breaking’ the matching and using ordinary logistic models instead, or has sometimes been interpreted that way, with the justification being potential small precision gains (<span class="citation" data-cites="pearce2016">Pearce (2016)</span>). In this blog post I want to demonstrate the advantages that conditional logistic regression can have in well-designed matched case-control studies of omic data that contain a substantial amount of technical variation.</p>
+<p>Conditional logistic regression<sup>1</sup> is a classic tool in an epidemiologist’s toolkit. It’s usually used to analyse matched case-control studies. However, popular methodological guidance has either explicitly advocated for ‘breaking’ the matching and using ordinary logistic models instead (or has sometimes been interpreted that way) with the justification being potential small precision gains (<span class="citation" data-cites="pearce2016">Pearce (2016)</span>). In this blog post, I want to demonstrate the advantages that conditional logistic regression can have in well-designed matched case-control studies of omic data that contain a substantial amount of technical variation.</p>
 <section id="the-example-study" class="level1">
 <h1>The example study</h1>
-<p>Let’s consider the following hypothetical omics study. Cases are 1:1 matched to controls on important covariates. Crucially, the case-control pairs are then block randomized over the analytical assay. That is, the matched pairs (blocks) are randomized over the plates and batches, and within the block we randomize the position of the case or control. In visual form where the numbers correspond to the matched pair:</p>
+<p>Let’s consider the following hypothetical omics study. Cases are 1:1 matched to controls on important covariates. Crucially, the case-control pairs are then block randomized over the analytical assay. That is, the matched pairs (blocks) are randomized over the plates and batches, and within the block we randomize the position of the case or control. These positions determine the processing order and when a sample gets, for example, injected into the machine for analysis. In visual form (where the numbers correspond to the matched pair, and we process from top to bottom, from left to right) this looks as follows:</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -9055,13 +9055,13 @@ font-style: inherit;">element_blank</span>())</span></code></pre></div>
 </section>
 <section id="unconditional-logistic-regression-breaking-matching" class="level2">
 <h2 class="anchored" data-anchor-id="unconditional-logistic-regression-breaking-matching">Unconditional logistic regression: breaking matching</h2>
-<p>Because of this bias, unconditional logistic regression with dummy variables is rarely used in epidemiology. More common is an unconditional logistic regression where the matching set indicators are not explicitly modeled. Instead, the matching is broken and the variables that were used for matching are added as predictor to the logistic model. Matched sets indicators are thus omitted. This approach also utilizes contrasts between matched pairs and pairs with only a control or case in it still contribute to the analysis.</p>
+<p>Because of this bias, unconditional logistic regression with dummy variables is rarely used in epidemiology. More common is an unconditional logistic regression where the matching set indicators are not explicitly modeled. Instead, the matching is broken and the variables that were used for matching are added as predictor to the logistic model. Matched sets indicators are thus omitted. This approach also uses contrasts between matched pairs. Importantly, with unconditional logistic regression, pairs that consist of only one member (because either the case or control did not yield data) can still contribute information to the analysis.</p>
 </section>
 <section id="conditional-logistic-regression" class="level2">
 <h2 class="anchored" data-anchor-id="conditional-logistic-regression">Conditional logistic regression</h2>
 <p>Another approach is conditional logistic regression (CLR). Instead of trying to estimate the potentially numerous stratum-specific intercepts (<img src="https://latex.codecogs.com/png.latex?%5Calpha_k">) from the dummy variable model, CLR treats them as nuisance parameters and disregards their estimation such that we can use methods for conditional inference to create a likelihood function. After some derivation<sup>2</sup>, the conditional likelihood for the matched set <img src="https://latex.codecogs.com/png.latex?k"> looks as follows for a 1:1 matched study design:</p>
-<p><img src="https://latex.codecogs.com/png.latex?%0Al_k(%5Cboldsymbol%7B%5Cbeta%7D)=%5Cfrac%7B%5Cmathrm%7Be%7D%5E%7B%5Cbeta%5E%7B%5Cprime%7D%20%5Cmathbf%7Bx%7D_%7B1%20k%7D%7D%7D%7B%5Cmathrm%7Be%7D%5E%7B%5Cbeta%5E%7B%5Cprime%7D%20%5Cmathbf%7Bx%7D_%7B1%20k%7D%7D+%5Cmathrm%7Be%7D%5E%7B%5Cbeta%5E%7B%5Cprime%7D%20%5Cmathbf%7Bx%7D_%7B0%20k%7D%7D%7D%20.%0A"> Where <img src="https://latex.codecogs.com/png.latex?x_1"> and <img src="https://latex.codecogs.com/png.latex?x_0"> correspond to the data from the case and control of a matched set <img src="https://latex.codecogs.com/png.latex?k"> respectively, and <img src="https://latex.codecogs.com/png.latex?%5Cbeta"> is the only unknown parameter (your exposure for example). In other words, this conditional likelihood is the probability that, within matched set <img src="https://latex.codecogs.com/png.latex?k">, the case is in fact the case if we assume a stratum-specific logistic regression model. The full conditional likelihood can be obtained here by taking the product of the likelihoods for each matched set (or summing the log-likelihoods of course).</p>
-<p>The important thing to remember for my argument is that – <u>contrary to logistic regression where we break the matching – the effect of a predictor is only measured relative to the values in its matched set rather than relative to all values of the predictor</u> (<span class="citation" data-cites="hosmer2013">Hosmer, Lemeshow, and Sturdivant (2013)</span>). In standard epidemiology training, this is expressed as ‘only disconcordant pairs contribute information to the analysis’. This is also why such training mentions that you cannot analyse factors that were matched on – these values are constant within a pair and this estimator is thus undefined.</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0Al_k(%5Cboldsymbol%7B%5Cbeta%7D)=%5Cfrac%7B%5Cmathrm%7Be%7D%5E%7B%5Cbeta%5E%7B%5Cprime%7D%20%5Cmathbf%7Bx%7D_%7B1%20k%7D%7D%7D%7B%5Cmathrm%7Be%7D%5E%7B%5Cbeta%5E%7B%5Cprime%7D%20%5Cmathbf%7Bx%7D_%7B1%20k%7D%7D+%5Cmathrm%7Be%7D%5E%7B%5Cbeta%5E%7B%5Cprime%7D%20%5Cmathbf%7Bx%7D_%7B0%20k%7D%7D%7D%20.%0A"> where <img src="https://latex.codecogs.com/png.latex?x_1"> and <img src="https://latex.codecogs.com/png.latex?x_0"> correspond to the data from the case and control of a matched set <img src="https://latex.codecogs.com/png.latex?k"> respectively, and <img src="https://latex.codecogs.com/png.latex?%5Cbeta"> is the only unknown parameter (your exposure for example). In other words, this conditional likelihood is the probability that, within matched set <img src="https://latex.codecogs.com/png.latex?k">, the case is in fact the case if we assume a stratum-specific logistic regression model. The full conditional likelihood can be obtained here by taking the product of the likelihoods for each matched set (or summing the log-likelihoods of course).</p>
+<p>The important thing to remember for my argument is that – <u>contrary to logistic regression where we break the matching – the effect of a predictor is only measured relative to the values in its matched set rather than relative to all values of the predictor</u> (<span class="citation" data-cites="hosmer2013">Hosmer, Lemeshow, and Sturdivant (2013)</span>). In standard epidemiology training, this is expressed as ‘only disconcordant pairs contribute information to the analysis’. This is also why such training mentions that you cannot analyse factors that were matched on – in these cases these values are constant within a pair and this estimator is thus undefined.</p>
 <p>In <code>R</code> you can easily fit a CLR by writing <code>survival::clogit(is_case ~ 1 + survival::strata(pair) + x, data = df)</code><sup>3</sup>.</p>
 </section>
 </section>
@@ -9327,13 +9327,13 @@ font-style: inherit;">'log_x_adj'</span>)</span></code></pre></div>
 </div>
 </div>
 </div>
-<p>Even though we did a pretty good job of eliminating the technical variation – at least visually speaking – I think that no matter how extensively we model and adjust for this variation, the remaining variation will be greater than the technical drift over just one position in the data. And this variation over one position is precisely the only (technical) variation that the CLR will utilize in our well designed example study. That is, in CLR we condition on the matched pair and both the case and control in the pair are approximately equally affected by the technical variation and this variation thus gets cancelled out. We have essentially matched on the technical variation. And in CLR these factors that are constant across a match set are adjusted away – even the unobserved ones!</p>
+<p>Even though we did a pretty good job of eliminating the technical variation – at least visually speaking – I think that no matter how extensively we model and adjust for this variation, the remaining variation will be greater than the technical drift over just one position in the data. And this variation over one position is precisely the only (technical) variation that the CLR will use in our well designed example study. That is, in CLR we condition on the matched pair and both the case and control in the pair are approximately equally affected by the technical variation and this variation thus gets cancelled out. We have essentially matched on the technical variation. And in CLR these factors that are constant across a match set are adjusted away – even the unobserved ones!</p>
 </section>
 <section id="caveats-and-other-designs" class="level1">
 <h1>Caveats and other designs</h1>
 <p>In this blog post, we saw that the key to dealing with technical variation in a case control design was (1) recognizing that technical variation over one position is likely minimal (relative to the total amount of technical variation) (2) recognizing that both measured and unmeasured factors in CLR are adjusted away (3) randomly locating a case and its control next to each other such that the technical variation would be minimal.</p>
-<p>I think that all of this could be contingent on the total total amount of (exposure) variation in study, because sometimes contrasts between groups can be much larger than within groups and as such contribute more information to the analysis. I should probably run some simulations to check that (shouldn’t we all?).</p>
-<p>There are of course many other designs than case-control studies. The case-cohort design for example. I do not have experience with case-cohort designs, but I do know that they are gaining popularity in environmental epidemiological omics studies because they easily allow for secondary analyses contrary to case-control studies (<span class="citation" data-cites="lin_proper_2009">Lin and Zeng (2009)</span>, <span class="citation" data-cites="obrien_case_2022">O’Brien, Lawrence, and Keil (2022)</span>). I would be interested to know examples of similar clever designs that mitigate the impact of technical variation in those types of studies.</p>
+<p>I think that all of this could be contingent on the total total amount of (exposure) variation in study because sometimes contrasts between groups can be much larger than within groups and as such contribute more information to the analysis. The curious reader, or future me can run simulations to better understand under which conditions my claims make most sense.</p>
+<p>There are of course many other epidemiological study designs than case-control studies. The case-cohort design for example. I do not have experience with case-cohort designs, but I do know that they are gaining popularity in environmental epidemiological omics studies because they easily allow for secondary analyses contrary to case-control studies (<span class="citation" data-cites="lin_proper_2009">Lin and Zeng (2009)</span>, <span class="citation" data-cites="obrien_case_2022">O’Brien, Lawrence, and Keil (2022)</span>). I would be interested to know examples of similar clever designs that mitigate the impact of technical variation in those types of studies.</p>
 
 
 
@@ -9389,10 +9389,10 @@ Data.”</span> May 5, 2025. <a href="https://doi.org/placeholder">https://doi.o
 
 
 
-<p>The field of environmental epidemiology has made significant investments in untargeted (also known as nontargeted) metabolomics over the past few years, to gain deeper insights into exposure levels, biological mechanisms, and their relationship to disease. These investments are starting to pay dividends by enabling larger studies, but this scale-up comes with its own challenges. With sample sizes growing substantially, processing all study samples in a single batch is no longer feasible, forcing analyses to span longer periods. These extended timeframes introduce greater variation in technical, non-biological factors that contaminate the data with unwanted variation. Additionally, as I’ve discussed in <a href="../..\blog-posts/left-censored-models-showcase/">a previous post</a>, this metabolomic data is often left-censored, creating further analytical challenges. In this post, I’ll share a method I developed that handles both the imputation of nondetects and the removal of technical variation in one and the same model<sup>1</sup>.</p>
-<section id="technical-variation-in-untargetednontargeted-metabolomics" class="level1">
-<h1>Technical variation in untargeted/nontargeted metabolomics</h1>
-<p>To illustrate the model, I will start with simulating some left-censored data that contains batch and plate effects (an example of technical variation). In this model, the study samples are processed in (100-well) plates that are nested within the batches. A proportion of these values will be censored. The censoring point (limit of detection) will differ per batch:</p>
+<p>The field of environmental epidemiology has made significant investments in untargeted metabolomics<sup>1</sup> over the past few years, to gain deeper insights into exposure levels, biological mechanisms, and their relationship to disease. These investments are starting to pay dividends by enabling larger studies, but this scale-up comes with its own challenges. With sample sizes growing substantially, processing all study samples in a single batch is no longer feasible, forcing analyses to span longer periods. These extended timeframes introduce greater variation in technical, non-biological factors that contaminate the data with unwanted variation. Additionally, as I’ve discussed in <a href="../..\blog/left-censored-models-showcase/index.html">a previous post</a>, this metabolomic data is often left-censored, creating further analytical challenges. In this post, I’ll share a method I developed that handles both the imputation of nondetects and the removal of technical variation in one and the same model<sup>2</sup>.</p>
+<section id="technical-variation-in-untargeted-metabolomics" class="level1">
+<h1>Technical variation in untargeted metabolomics</h1>
+<p>To illustrate the model, I will start with simulating some left-censored data that contains batch and plate effects (examples of technical variation). In this model, the study samples are processed in (100-well) plates that are nested within the batches. A proportion of these values will be censored. The censoring point (limit of detection) will differ per batch (as I see in real world data):</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1">n <span class="ot" style="color: #003B4F;
 background-color: null;
@@ -9629,7 +9629,7 @@ font-style: inherit;">FALSE</span>) </span></code></pre></div>
 <!-- #   theme_minimal() + -->
 <!-- #   theme(legend.position = 'top') -->
 <!-- # ``` -->
-<p>The plot below shows the technical variation (the different colors correspond to different batches) and the left-censored nature of the (untargeted) metabolic data. The data is left-censored because our instruments don’t have unlimited sensitivity. Due to left-censoring (dashed line), we observe only part of the distribution. Without the variation introduced by the different batches and plates the distribution would be much narrower. It’s also interesting to see that you can have an apparent drift over time that’s just the consequence of random variation between batches.</p>
+<p>The plot below shows the technical variation (the different colors correspond to different batches) and the left-censored nature of the (untargeted) metabolic data. The data is left-censored because our instruments don’t have unlimited sensitivity. Due to left-censoring (dashed line), we observe only part of the distribution. Without the variation introduced by the different batches and plates the distribution would be much narrower. It’s also interesting to see that you can have an apparent drift over time that’s just the consequence of random variation between batches and not a separate linear trend.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -10429,18 +10429,14 @@ font-style: inherit;">/</span> p03 </span></code></pre></div>
 <section id="the-status-quo-of-imputation-and-technical-variation-adjustment" class="level1">
 <h1>The status quo of imputation and technical variation adjustment</h1>
 <p>As I tried to illustrate using these plots, technical variation and left-censoring due to limits of detection (LOD) can be significant hurdles in metabolomics analysis. Yet, read method sections in the literature, and you’ll often find they’re treated like an afterthought. If addressed at all, methods sections will often only briefly state: ‘batch effects were removed using ComBat’ (despite ComBat fundamentally ignoring the censored nature of data below the LOD) or ‘data was imputed using methods X or Y’ (referencing imputation techniques like those by <span class="citation" data-cites="lubin_2004">Lubin et al. (2004)</span>. or <span class="citation" data-cites="lazar_2016">Lazar et al. (2016)</span> which focus solely on left-censoring without inherently handling batch effects).</p>
-<p>Furthermore, these references to ‘foundational’ imputation methods (like those by <span class="citation" data-cites="lubin_2004">Lubin et al. (2004)</span> or <span class="citation" data-cites="lazar_2016">Lazar et al. (2016)</span>) typically lack specifics on the exact imputation model; they neither detail which variables were included in the current study’s imputation nor do the original papers offer clear guidance on which should be included (because it wasn’t the goal of those papers). However, this is important for the analyst and the reader to know, as imputation models and the models for the subsequent analysis need to be congenial – meaning the imputation must account for the relationships you intend to study later. The variables included in imputation can matter greatly!</p>
+<p>Furthermore, these references to ‘foundational’ imputation methods (like those by <span class="citation" data-cites="lubin_2004">Lubin et al. (2004)</span> or <span class="citation" data-cites="lazar_2016">Lazar et al. (2016)</span>) typically lack specifics on the exact imputation model; they neither detail which variables were included in the current study’s imputation nor do the original papers offer clear guidance on which should be included (because it wasn’t the goal of those papers). However, this is important for the analyst and the reader to know, as imputation models and the models for the subsequent analysis need to be <em>congenial</em> – meaning the imputation must account for the relationships you intend to study later. The variables included in imputation can matter greatly!</p>
 </section>
-<section id="why-a-unified-model-is-better" class="level1">
-<h1>Why a unified model is better</h1>
-<p>Moreover, I will argue that the imputation and technical variation adjustment is best done in one and the same model, because the technical variation and left-censoring are often intertwined. Namely, the same technical factors causing batch-to-batch (or plate-to-plate) shifts in metabolite levels can also influence instrument sensitivity or baseline noise, thereby changing the effective LOD for different batches. This means that you cannot obtain an unbiased estimate of the technical variation without modeling the left-censoring, or the left-censoring (imputes) without modeling the the technical variation.</p>
-<p>In other words, if you adjust for batch effects before imputation (e.g., using methods like ComBat that ignore censoring), you are applying adjustments to data that either contains arbitrary placeholders for non-detects (like LOD/2) or simply ignores the information that the true value is below a certain batch-specific threshold. This distorts the estimation of the batch effect itself. And the higher proportion of nondetects, the worse this bias can get.</p>
-<p>One might also consider a seemingly pragmatic two-step approach: first, perform multiple imputation using a model that accounts for batch-specific LODs and includes batch and plate effects (perhaps as fixed effects<sup>2</sup>); second, fit a separate mixed model to each imputed dataset to estimate and remove these batch effects. However, this sequential process introduces several statistical challenges compared to a unified model:</p>
-<ul>
-<li>Treating batch effects as fixed during imputation (often a limitation of available software for censored models) but then as random during the adjustment step creates a conceptual mismatch in how technical variation is modeled and removed.</li>
-<li>Estimating imputation parameters and batch effects sequentially can be less statistically efficient than a unified model where all parameters are estimated simultaneously, allowing information to be shared across all model components.</li>
-</ul>
-<p>Therefore, a unified model that simultaneously estimates the technical variation and performs the imputation using batch-specific LOD information is better able to obtain unbiased estimates of both the true underlying metabolite levels and the relationships with outcomes or exposures. The <code>brms</code> model presented below is a way to implement such a unified model. Importantly, such a model, or any model that attempts to identify and remove technical variation, is contingent on sound experimental design; only with sound experimental design can we say that in expectation the batches and plates should have the same mean. If you don’t randomize the positions of the samples, supposed technical variation may be real biological variation.</p>
+<section id="an-integrated-statistical-model-of-left-censoring-and-technical-variation" class="level1">
+<h1>An integrated statistical model (of left-censoring and technical variation)</h1>
+<p>Moreover, I will argue that the left-censored modeling (and subsequent imputation) and technical variation adjustment should be done in one and the same model because the technical variation and left-censoring are often intertwined. Namely, the same technical factors causing batch-to-batch (or plate-to-plate) shifts in metabolite levels can also influence instrument sensitivity or baseline noise, thereby changing the effective LOD for different batches. This means that you cannot obtain an unbiased estimate of the technical variation without modeling the left-censoring, or the left-censoring without modeling the the technical variation. The higher proportion of nondetects, the worse the bias can get.</p>
+<p>In other words, if you adjust for batch effects before imputation (e.g., using methods like ComBat that ignore censoring), you are applying adjustments to data that contains arbitrary placeholders for non-detects (like LOD/2). This distorts the estimation of the batch effect itself. If you impute your nondetects (using a statistical model) before removing possible batch effects, you need to take the batch effect into account to be in line with the observed data. At that point you may as well integrate them all together in one at the same model.</p>
+<p>The <code>brms</code> model presented below is a way to implement such a unified model. It models a left-censored outcome with a random intercept term for the batch, and plate, with the plate nested in the batch. For practical purposes, censored observations are assumed to be censored at the minimum detected value of a batch, but you may also model this as a random parameter. After fitting the model, we impute values below the (technical variation adjusted) limit of detection using the original formula specification. Subsequently, we subtract the technical variation from the data (observed values and imputed nondetects).</p>
+<p>Importantly, our model – or any model that attempts to identify and remove technical variation – is contingent on sound experimental design; only with sound experimental design can we say that in expectation the batches and plates should have the same (conditional) mean. If you don’t randomize the positions of the samples, supposed technical variation may be real biological variation. In practice, batches and plates are often not perfectly balanced – either by design or because of chance – our method can then easily include the variables that are required to obtain the same (conditional mean) across batches by including them in the formula specification. Hereby we avoid potentially removing variation not related to technical processes of the instrument.</p>
 </section>
 <section id="a-brms-model" class="level1">
 <h1>A {brms} model</h1>
@@ -10528,17 +10524,17 @@ Chain 3 Iteration: 1001 / 2000 [ 50%]  (Sampling)
 Chain 4 Iteration: 1000 / 2000 [ 50%]  (Warmup) 
 Chain 4 Iteration: 1001 / 2000 [ 50%]  (Sampling) 
 Chain 3 Iteration: 2000 / 2000 [100%]  (Sampling) 
-Chain 3 finished in 60.5 seconds.
+Chain 3 finished in 60.2 seconds.
 Chain 1 Iteration: 2000 / 2000 [100%]  (Sampling) 
-Chain 1 finished in 61.0 seconds.
+Chain 1 finished in 60.4 seconds.
 Chain 2 Iteration: 2000 / 2000 [100%]  (Sampling) 
-Chain 2 finished in 63.4 seconds.
+Chain 2 finished in 63.3 seconds.
 Chain 4 Iteration: 2000 / 2000 [100%]  (Sampling) 
-Chain 4 finished in 66.4 seconds.
+Chain 4 finished in 66.3 seconds.
 
 All 4 chains finished successfully.
-Mean chain execution time: 62.8 seconds.
-Total execution time: 66.6 seconds.</code></pre>
+Mean chain execution time: 62.5 seconds.
+Total execution time: 66.4 seconds.</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1">total_nr_draws <span class="ot" style="color: #003B4F;
 background-color: null;
@@ -10670,7 +10666,7 @@ font-style: inherit;">-</span> batch_effect</span>
 <span id="cb5-20">  </span>
 <span id="cb5-21">  <span class="co" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;"># draw values below lod</span></span>
+font-style: inherit;"># draw values below lod (cdf inversion method)</span></span>
 <span id="cb5-22">  <span class="do" style="color: #5E5E5E;
 background-color: null;
 font-style: italic;">## what percentiles belong to start with these params</span></span>
@@ -10734,7 +10730,7 @@ font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">as_tibble</span>(imputed_sets)</span></code></pre></div>
 </div>
-<p>Below we see that the model has indeed recovered the parameters of the data generating process. The imputations are based on these parameters.</p>
+<p>Below we see that the model has indeed recovered the parameters of the data generating process. The imputations below the LOD are based on these recovered parameters.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -10750,27 +10746,27 @@ Formula: log_y_obs | cens(left_cens) ~ 1 + x + (1 | batch_id/plate_nested_coding
 Multilevel Hyperparameters:
 ~batch_id (Number of levels: 5) 
               Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-sd(Intercept)     1.98      0.77     0.98     3.96 1.00     1647     1743
+sd(Intercept)     1.96      0.79     0.98     4.07 1.00     1671     2049
 
 ~batch_id:plate_nested_coding (Number of levels: 20) 
               Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-sd(Intercept)     0.60      0.13     0.41     0.89 1.00     1333     2191
+sd(Intercept)     0.60      0.12     0.41     0.89 1.00     1306     1809
 
 Regression Coefficients:
           Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-Intercept    11.49      0.86     9.80    13.26 1.00     1791     2050
-x             0.07      0.02     0.02     0.11 1.00     5030     2630
+Intercept    11.42      0.85     9.66    13.04 1.00     1576     1708
+x             0.07      0.02     0.02     0.11 1.00     5054     2497
 
 Further Distributional Parameters:
       Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-sigma     1.01      0.02     0.97     1.05 1.00     4824     2472
+sigma     1.01      0.02     0.97     1.05 1.00     5162     2790
 
 Draws were sampled using sample(hmc). For each parameter, Bulk_ESS
 and Tail_ESS are effective sample size measures, and Rhat is the potential
 scale reduction factor on split chains (at convergence, Rhat = 1).</code></pre>
 </div>
 </div>
-<p>Visually, we can plot one of the imputed sets, and we can see that it fits well with the ideal data distribution that has the technical variation removed and the nondetects imputed. We imputed multiple times to represent and capture the uncertainty around the exact value of the nondetects<sup>3</sup>. We can also see that some of the observed values are now under the the original limit of detection. This is because – according to our model – these observations would have been nondetects in a ‘usual’ batch. And vice versa, there are some nondetects that would have been observed in a ‘usual’ batch and are now above the original LOD.</p>
+<p>Visually, we can plot one of the imputed sets, and see that it fits well with the ideal data distribution that has the technical variation removed and the nondetects imputed. We imputed multiple times to represent and capture the uncertainty around the exact value of the nondetects<sup>3</sup>. We can also see that some of the observed values are now under the the original limit of detection. This is because – according to our model – these observations would have been nondetects in a ‘usual’ batch. And vice versa, there are some nondetects that would have been observed in a ‘usual’ batch and are now above the original LOD.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -11135,56 +11131,26 @@ font-style: inherit;">ggplot</span>(<span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">aes</span>(<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">x =</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">y =</span> value, <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">fill =</span> censored)) <span class="sc" style="color: #5E5E5E;
+font-style: inherit;">x =</span> value)) <span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">+</span> </span>
-<span id="cb10-8">  ggrain<span class="sc" style="color: #5E5E5E;
+<span id="cb10-8">  ggdist<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">geom_rain</span>(<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">rain.side =</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'r'</span>) <span class="sc" style="color: #5E5E5E;
+font-style: inherit;">stat_dotsinterval</span>() <span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">+</span></span>
 <span id="cb10-9">  <span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">coord_flip</span>() <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span></span>
-<span id="cb10-10">  see<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">scale_fill_okabeito</span>(<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">order =</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">c</span>(<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>,<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span>)) <span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span></span>
-<span id="cb10-11">  <span class="fu" style="color: #4758AB;
-background-color: null;
 font-style: inherit;">labs</span>(<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">y =</span> <span class="st" style="color: #20794D;
+font-style: inherit;">x =</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">'Imputed value'</span>) <span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">+</span></span>
-<span id="cb10-12">  <span class="fu" style="color: #4758AB;
+<span id="cb10-10">  <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">guides</span>(<span class="at" style="color: #657422;
 background-color: null;
@@ -11193,19 +11159,19 @@ background-color: null;
 font-style: inherit;">'none'</span>) <span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">+</span></span>
-<span id="cb10-13">  <span class="fu" style="color: #4758AB;
+<span id="cb10-11">  <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">theme_minimal</span>() <span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">+</span></span>
-<span id="cb10-14">  <span class="fu" style="color: #4758AB;
+<span id="cb10-12">  <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">theme</span>(<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">axis.title.y =</span> <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">element_blank</span>(), </span>
-<span id="cb10-15">        <span class="at" style="color: #657422;
+<span id="cb10-13">        <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">axis.text.y =</span> <span class="fu" style="color: #4758AB;
 background-color: null;
@@ -11224,15 +11190,17 @@ font-style: inherit;">element_blank</span>())</span></code></pre></div>
 </div>
 </div>
 </section>
-<section id="implications" class="level1">
-<h1>Implications</h1>
-<p>Unfortunately, I think this intertwined nature of nondetects and batch effects also means that your technical variation adjustment needs to be bespoke; you cannot do this imputation and ‘denoising’ once for your dataset and be done with it (if you care to this degree about bias). In theory, you could build the richest possible imputation model (and thus technical variation removal model) that is congenial with the most complex analysis that you would like to do and be done with it. In practice, this would be very hard with the amount of times a dataset is reanalysed by different analysts and the near certainty of missing values for the other variables in a rich imputation model. It will be even harder to create an congenial dataset when a mixture is the topic of interest and the dataset contains many left-censored features, because you would need to impute in two variables simultaneously and there’s no (easy) way to fit a multivariate left-censored model <sup>4</sup>.</p>
-<p>One potential way around this intertwined nature may be using the pooled QC samples for the batch adjustment using some kind of LOESS fit across the injection order. However, (1) labs do not always deliver information on QCs (2) there are less QA samples than study samples and as such there’s less data to inform such a model (3) readily available LOESS models do not take left-censoring into account. More importantly, it also doesn’t easily incorporate other covariates in the adjustment process which risks removing real biological variation and potentially failing to capture that for example cases are more often censored. Such a LOESS approach also still separates batch correction from the imputation of study samples, failing to address this interdependence between batch-specific LODs and the imputation process itself.</p>
+<section id="challenges-and-solutions" class="level1">
+<h1>Challenges and solutions</h1>
+<p>In this exact approach to imputation and technical variation, your imputation and technical variation adjustment needs to be bespoke; you cannot do this imputation and ‘denoising’ once for your dataset and be done with it (if you care to this degree about bias). In theory, you could build the richest possible imputation model (and thus technical variation removal model) that is congenial with the most complex analysis that you would like to do and be done with it. In practice, this would be impossible for labs because they do not have (all) the covariate data, and it would be hard to do for data recipients with the amount of times a dataset is reanalysed by different analysts and the near certainty of missing values for the other variables in a rich imputation model<sup>4</sup>. It will be even harder to create a congenial dataset when a mixture is the topic of interest and the dataset contains many left-censored features because you would need to impute in two variables simultaneously and it’s not trivial to fit a multivariate left-censored model<sup>5</sup>.</p>
+<p>One potential way around this intertwined nature may be using the pooled QC samples for the batch adjustment using some kind of LOESS fit across the injection order. However, (1) labs do not always deliver information on QCs (2) there are less QA samples than study samples and as such there’s less data to inform such a model (3) readily available LOESS models do not take left-censoring into account. More importantly, it also wouldn’t incorporate other covariates in the adjustment process which risks removing real biological variation and potentially failing to capture that – for example – cases are more often censored. Such a LOESS approach also still separates batch correction from the imputation of study samples, failing to address this interdependence between batch-specific LODs and the imputation process itself.</p>
+<p>Another way around this – that is potentially attractive to labs if they also want to provide a batch adjusted dataset – is to slightly change our approach. We still take the intertwined nature of nondetects and batch effects into account by fitting the same statistical model. But contrary to what I described before, we do not impute. We only remove the technical variation by subtracting the technical variation terms from the observed data. We leave the imputation to the analyst. That part will still be bespoke. But the analyst can now just focus on creating a congenial imputation model like they have probably done before for more common epidemiological data. They do not need to worry about the technical variation<sup>6</sup>. They only need a <code>mice</code> implementation of the left-censored imputation model from <span class="citation" data-cites="lubin_2004">Lubin et al. (2004)</span> and they are ready to go! I think such a two-step approach is less elegant and maybe less statistically efficient but it meets a need of many labs and analysts and I think it’s a marked improvement over what they usually do.</p>
 </section>
 <section id="possible-extensions" class="level1">
 <h1>Possible extensions</h1>
-<p>Sometimes there’s also drift within a plate or a batch. One possible way to model this is by adding a random slope for injection order within a batch or plate. The code from above readily supports this, because the code assumes all the random effects are nuisance variation. Although, I think that such more complicated models are much harder to fit so you may want to represent this drift in another way. Maybe using some fixed effects<sup>5</sup> and then remove this from the imputations and adjustment manually using some <code>model.matrix()</code> operation.</p>
-<p>One final point that I want to make on these models, is on the assumption of a multiplicative error term – here made by the log transformation – in metabolomic data. It’s a useful model in the sense that it permits only positive values and it is in line with our idea of the data generation process. Namely, it is plausible that the true error structure arises from such a multiplicative process, because measured intensity/concentration can be thought of as a function of <em>duration of exposure</em> <img src="https://latex.codecogs.com/png.latex?%5Ctimes"> <em>number of times exposed</em>. However, in a lognormal distribution the error is also smaller for smaller values. And this is of course opposite of the limit of detection idea. If the error were indeed smaller for smaller values there would be no limit of detection! I hope the multiple versions of the imputed dataset at least overcome this partially. <span class="citation" data-cites="senn2012ghosts">Senn, Holford, and Hockey (2012)</span> mention that realistic likelihood models could consider a complex mixture of true concentration and error measurement models, or model the mean and variance structures separately. While I always like to think about the ideal model, I think for large scale metabolomics where you often have to fit this model to thousands of features this is not feasible.</p>
+<p>Sometimes there’s also drift within a plate or a technical variation beyond the batch/plate effects described here. One possible way to model this is by adding a random slope for injection order within a batch or plate. The code from above readily supports this because the code assumes all the random effects are nuisance variation. However, you may want to represent this drift in another way because I think that such more complicated models are much harder to fit. You can consider using some fixed effects<sup>7</sup> and then remove their effect using some <code>model.matrix()</code> operation (to keep the effect of variables like e.g.&nbsp;case).</p>
+<p>Besides the mean, the variance can be affected by the same processes that introduce technical variation in the mean of batches. We have not modeled that here, but ComBat for example, does model the impact of technical variation on the variance of the batches. We can also take that into account because <code>brms</code> <a href="https://cran.r-project.org/web/packages/brms/vignettes/brms_distreg.html">allows</a> you to model the variance as a function of variables. But I imagine that for fitting those models (at scale) you probably want to pool information on this variance parameter across many features in some some hierarchical model or empirical Bayes method (like ComBat).</p>
+<p>One final point that I want to make on these models, is on the assumption of a multiplicative error term – here made by the log transformation – in metabolomic data. It’s a useful model in the sense that it permits only positive values (on the original scale) and it is in line with our idea of the data generation process. Namely, it is plausible that the true error structure arises from such a multiplicative process, because measured intensity/concentration can be thought of as a function of <em>duration of exposure</em> <img src="https://latex.codecogs.com/png.latex?%5Ctimes"> <em>number of times exposed</em>. However, in a lognormal distribution the error is also smaller for smaller values. And this is of course opposite of the limit of detection idea. If the error were indeed smaller for smaller values there would be no limit of detection! I hope the multiple versions of the imputed dataset at least overcome this partially. <span class="citation" data-cites="senn2012ghosts">Senn, Holford, and Hockey (2012)</span> mention that realistic likelihood models could consider a complex mixture of true concentration and error measurement models, or model the mean and variance structures separately. While I always like to think about the ideal model, I think for large scale metabolomics – where you often have to fit this model to thousands of features – this is not feasible.</p>
 <!-- " the measured concentration can be thought of as a function of *duration of exposure* $\times$ *number of times exposed*. So differences in measured concentrations of the same compound (i.e. the variation) arise because of differences in one (or both) of the terms of this formula. And as we can see this formula is a *product* of factors, logarithms tend to work better when data arises from such a multiplicative process." -->
 
 
@@ -11253,11 +11221,13 @@ Senn, Stephen, Nick Holford, and Hans Hockey. 2012. <span>“The Ghosts of Depar
 </div></section><section id="footnotes" class="footnotes footnotes-end-of-document"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
 
 <ol>
-<li id="fn1"><p>If your research question pertains directly to the exposure or metabolite level itself – rather than its relationship as a predictor for an outcome – then imputation is not necessary of course, because you can directly use the fitted left-censored model.↩︎</p></li>
-<li id="fn2"><p>Fast, robust, frequentist left-censored multilevel models are not really <a href="../..\blog-posts/left-censored-models-showcase/">possible/available</a>.↩︎</p></li>
+<li id="fn1"><p>Also known as nontargeted.↩︎</p></li>
+<li id="fn2"><p>If your research question pertains directly to the exposure or metabolite level itself – rather than its relationship as a predictor for an outcome – then imputation is not necessary of course, because you can directly use the fitted left-censored model.↩︎</p></li>
 <li id="fn3"><p>In discussions I get the sense that many people think that the goal of imputation in metabolomics is to get as close as possible to the value that we would have observed with unlimited instrument sensitivity. While that’s welcome, for valid downstream inference with censored data it’s more important to accurately represent the uncertainty associated with those unobserved values.↩︎</p></li>
-<li id="fn4"><p>I think some kind of Gibbs sampler or some chained equation is the best we can do.↩︎</p></li>
-<li id="fn5"><p>I’m not sure what’s better (in this setup): a model with random slopes that possibly doesn’t fully converge or some 20 fixed effect interaction terms (with potentially some sparsity inducing horseshoe or LASSO priors). I guess putting (very) strong priors on the random slopes is the most logical option.↩︎</p></li>
+<li id="fn4"><p>Although <code>brms</code> seems to <a href="https://cran.r-project.org/web/packages/brms/vignettes/brms_missings.html">accommodate</a> this as well. This extension is left as an exercise to the reader.↩︎</p></li>
+<li id="fn5"><p>I think some kind of Gibbs sampler or some chained equation is the best we can do. Update: see <a href="../..\blog/bivariate-censoring/index.html">this blog post</a> on how to do this.↩︎</p></li>
+<li id="fn6"><p>Not many people worry about the technical variation anyhow – but now there’s also less <em>need</em> to.↩︎</p></li>
+<li id="fn7"><p>I’m not fully sure what’s better (in such a setup): a model with random slopes that possibly doesn’t fully converge or some 20 fixed effect interaction terms (with potentially some sparsity inducing horseshoe or LASSO priors). I guess putting (very) strong priors on the random slopes is the most logical option.↩︎</p></li>
 </ol>
 </section><section class="quarto-appendix-contents" id="quarto-citation"><h2 class="anchored quarto-appendix-heading">Citation</h2><div><div class="quarto-appendix-secondary-label">BibTeX citation:</div><pre class="sourceCode code-with-copy quarto-appendix-bibtex"><code class="sourceCode bibtex">@online{oosterwegel2025,
   author = {Oosterwegel, Max J.},
@@ -11285,10 +11255,10 @@ Technical Variation in Left-Censored Metabolomic Data.”</span> April 28,
 
 
 
-<p>In environmental epidemiology – and environmental studies more generally – we often aim to detect trace levels of pollutants, metabolites, or biomarkers. Be it in a biospecimen like blood and urine or in environmental media such as soil, water, and air. This can be done with <a href="https://en.wikipedia.org/wiki/Gas_chromatography%E2%80%93mass_spectrometry">liquid/gas chromatography mass spectrometry instruments</a> among others. Even though these instruments are very sensitive these days, they will sometimes hit their detection limits. This blog posts will briefly go over on how to handle such data statistically speaking, and what options are available in <code>R</code> to fit these models.</p>
+<p>In environmental epidemiology – and environmental studies more generally – we often aim to detect trace levels of pollutants, metabolites, or biomarkers. This can be done with for example <a href="https://en.wikipedia.org/wiki/Gas_chromatography%E2%80%93mass_spectrometry">liquid/gas chromatography mass spectrometry instruments</a>, be it in a biospecimen like blood and urine or in environmental media such as soil, water, and air. And even though these instruments are very sensitive these days, they will sometimes hit their detection limits. This blog post will briefly go over how to handle such data statistically speaking, and what options are available in <code>R</code> to fit these models.</p>
 <section id="censoring" class="level1">
 <h1>Censoring</h1>
-<p>Every epidemiologist is familiar with the standard survival analysis example that describes right censored observations. In this example, some participants are lost to follow-up or do not experience the event during the study. As a result, for these participants we only know that a possible event occurred somewhere after our observation period. These observations are then said to be right censored at the end of this window.</p>
+<p>Every epidemiologist is familiar with the standard survival analysis example that describes right-censored observations. In this example, some participants are lost to follow-up or do not experience the event during the study. As a result, for these participants we only know that a possible event occurred somewhere after our observation period. These observations are then said to be right-censored at the end of this window.</p>
 <p>With the aforementioned instruments, the situation is flipped: we only know a value is <em>less</em> than a certain value. In these cases, our instrument can’t discern the analyte from background noise below a certain point. In other words, measurements on such an instrument were limited to a minimum measurement of <img src="https://latex.codecogs.com/png.latex?l"> so any measurement smaller than <img src="https://latex.codecogs.com/png.latex?l"> was recorded as <img src="https://latex.codecogs.com/png.latex?l">. We refer to this minimum measurement as the limit of detection or limit of quantification and the data is said to be left-censored at this limit<sup>1</sup>. Measurements smaller than this simply cannot be measured with this instrument.<sup>2</sup></p>
 <p>Writing this in a more formal way, we can specify a latent regression model with an outcome that is either observed or unobserved:</p>
 <p><img src="https://latex.codecogs.com/png.latex?%0Ay_i%5E*=%20%5Cbegin%7Bcases%7Dy_i%20&amp;%20%5Ctext%20%7B%20if%20%7D%20y_i%3El%20%5C%5C%0Al%20&amp;%20%5Ctext%20%7B%20if%20%7D%20y_i%20%5Cleq%20l%20%5Cend%7Bcases%7D%0A"> where <img src="https://latex.codecogs.com/png.latex?y_i"> represents the ‘true’, latent values, <img src="https://latex.codecogs.com/png.latex?y_i%5E*"> are values we observe in reality, and <img src="https://latex.codecogs.com/png.latex?l"> is the limit of detection<sup>3</sup>.</p>
@@ -12041,7 +12011,7 @@ font-style: inherit;">$</span>par</span></code></pre></div>
 <p>Of course there are also <code>R</code> packages that can do such a procedure for us. Both frequentist and Bayesian. Below an overview:</p>
 <section id="survival" class="level3">
 <h3 class="anchored" data-anchor-id="survival">{survival}</h3>
-<p>In {survival} you can specify left-censored models just as you would specify right censored models using the <code>Surv</code> object. The <code>censor_point</code> can also be a vector and thereby allow your observations to be censored at different levels/limits.</p>
+<p>In {survival} you can specify left-censored models just as you would specify your right-censored survival models using the <code>Surv</code> object. The only difference being that we assume a regular Gaussian distribution here for the outcome. Moreover we need to specify which data is left-censored and at what point. This <code>censor_point</code> can also be a vector and thereby allow your observations to be censored at different levels/limits.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1">m <span class="ot" style="color: #003B4F;
 background-color: null;
@@ -12245,8 +12215,7 @@ Log-likelihood: -1587.58 on 3 Df</code></pre>
 </section>
 <section id="multilevel-left-censored-models" class="level2">
 <h2 class="anchored" data-anchor-id="multilevel-left-censored-models">Multilevel left-censored models</h2>
-<p>Sometimes your data is more complicated and you want to specify different levels of your data. For example: a random intercept that specifies what subject or batch an observation belongs to. Your <code>R</code> package options are more limited then, as the frequentist approach now needs to additionally integrate over the random effects in the definition of the marginal likelihood.</p>
-<p>The {survival} model does not support such models while {censReg} supports only a simple two-level random intercept model:</p>
+<p>Sometimes your data is more complicated and you want to specify different levels of your data. For example: a random intercept that specifies what subject or batch an observation belongs to. Your <code>R</code> package options are more limited then, as the frequentist approach now needs to additionally integrate over the random effects in the definition of the marginal likelihood. The {survival} model does not support such models while {censReg} supports only a simple two-level random intercept model:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1">samples_p_batch <span class="ot" style="color: #003B4F;
 background-color: null;
@@ -12490,7 +12459,7 @@ method: hybrid EM and quasi-Newton
 converged: TRUE </code></pre>
 </div>
 </div>
-<p>We can also use random slopes in GLMMadaptive. But only a single grouping factor (i.e., no nested (i.e.&nbsp;2+ levels) or crossed random effects designs) is <a href="https://cran.r-project.org/web/packages/GLMMadaptive/vignettes/GLMMadaptive.html">supported</a> at the moment. {GLMMadaptive} is relatively fast. Unfortunately, when I had to fit more than 20 of these models for projects at least one of those models had convergence issues/errors. But perhaps someone with more feel for optimizer parameters is more successful.</p>
+<p>We can also use random slopes in GLMMadaptive. But only a single grouping factor (i.e., no nested (i.e.&nbsp;2+ levels) or crossed random effects designs) is <a href="https://cran.r-project.org/web/packages/GLMMadaptive/vignettes/GLMMadaptive.html">supported</a> at the moment. {GLMMadaptive} is relatively fast. Unfortunately, when I had to fit more than 20 of these models for projects at least one of those models had convergence issues/errors. But perhaps someone with more feel for optimizer parameters is more successful in fitting these models at scale.</p>
 <p>And contrary to {censReg} you can extract the random effects:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1">GLMMadaptive<span class="sc" style="color: #5E5E5E;
@@ -12515,7 +12484,7 @@ font-style: inherit;">head</span>()</span></code></pre></div>
 </section>
 <section id="brms-stan" class="level3">
 <h3 class="anchored" data-anchor-id="brms-stan">{brms} / {STAN}</h3>
-<p>For Bayesian software implementations the addition of random intercepts and slopes is less challenging, because it avoids the cumbersome integration. Similarly to {GLMMadaptive} we specify an additional indicator variable for our {brms} model, but this time left-censoring is indicated by <img src="https://latex.codecogs.com/png.latex?-1"> (uncensored is <img src="https://latex.codecogs.com/png.latex?0"> in <code>brms</code> and <img src="https://latex.codecogs.com/png.latex?1"> indicates right censoring):</p>
+<p>The addition of random intercepts and slopes is less challenging in a Bayesian framework, because it avoids the cumbersome integration. Similarly to {GLMMadaptive} we specify an additional indicator variable for our {brms} model, but this time left-censoring is indicated by <img src="https://latex.codecogs.com/png.latex?-1"> (uncensored is <img src="https://latex.codecogs.com/png.latex?0"> in <code>brms</code> and <img src="https://latex.codecogs.com/png.latex?1"> indicates right-censoring):</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1">m <span class="ot" style="color: #003B4F;
 background-color: null;
@@ -12732,11 +12701,11 @@ generated quantities {
 }</code></pre>
 </div>
 </div>
-<p>With {brms} the possibilities are almost endless<sup>7</sup> and fortunately its speed has also improved the last few years. My censored models usually converge out of the box, even with multiple random intercept terms. And with some reasonably strong priors I’ve also had success with high proportions of censored data (say &gt;80%).</p>
+<p>With {brms} the possibilities are almost endless<sup>7</sup> and fortunately its speed has also noticeably improved the last few years. My censored models usually converge out of the box, even with multiple random intercept terms. And with some reasonably strong priors I’ve also had success with high proportions of censored data (say &gt;80%) and multiple interaction terms.</p>
 </section>
 <section id="mcmcglmm" class="level3">
 <h3 class="anchored" data-anchor-id="mcmcglmm">{MCMCglmm}</h3>
-<p>{MCMCglmm} also supports left-censored multilevel (&gt;two-level?) models. The random effect notation is a bit <a href="https://stat.ethz.ch/pipermail/r-sig-mixed-models/2013q1/019896.html">different</a> though. The intercept is varying by subject here (random intercept), <code>random = ~us(1+fixed_effect):cluster</code> gives a random intercept/slope model with estimated covariance, and <code>random = ~idh(1+fixed_effect):cluster</code> is the same but with the covariance set to 0. We can specify a left-censored outcome by creating two variables. If left-censored, <code>y_obs_min</code> is <code>-Inf</code> and <code>y_obs_max</code> takes on the value of the censoring point, in the other, non censored cases <code>y_obs_min</code> and <code>y_obs_max</code> are identical and take on the observed value:</p>
+<p>{MCMCglmm} also supports left-censored multilevel (&gt;two-level?) models. The random effect notation is a bit <a href="https://stat.ethz.ch/pipermail/r-sig-mixed-models/2013q1/019896.html">different</a> though. The intercept is varying by subject here (random intercept), <code>random = ~us(1+fixed_effect):cluster</code> gives a random intercept/slope model with estimated covariance, and <code>random = ~idh(1+fixed_effect):cluster</code> is the same but with the covariance set to 0. We can specify a left-censored outcome by creating two variables. If left-censored, <code>y_obs_min</code> is <code>-Inf</code> and <code>y_obs_max</code> takes on the value of the censoring point. In the other, non censored cases <code>y_obs_min</code> and <code>y_obs_max</code> are identical and take on the observed value:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -12874,7 +12843,7 @@ units    0.4978472 0.009719887 9.719887e-05   0.0002157377</code></pre>
 </section>
 <section id="inla" class="level3">
 <h3 class="anchored" data-anchor-id="inla">{INLA}</h3>
-<p>Lastly I want to mention the {INLA} package. It seems like it’s neither purely frequentist nor fully Bayesian but instead <em>approximates</em> the posterior marginals. It’s mostly used in spatial statistics so perhaps this makes it the ideal candidate for censored concentration measurements with a spatial element, say a measurement campaign. Its interface is slightly unusual for the <code>R</code> regression packages I’m familiar with, but it is very, very fast! Many censored likelihood families are supported, but unfortunately the Gaussian family is not one of them:</p>
+<p>Lastly, I want to mention the {INLA} package. It seems like it’s neither purely frequentist nor fully Bayesian but instead <em>approximates</em> the posterior marginals. It’s mostly used in spatial statistics so perhaps this makes it the ideal candidate for censored concentration measurements with a spatial element, such as data from a measurement campaign. Its interface is slightly unusual compared to the <code>R</code> regression packages I’m familiar with, but it is very, very fast! Many censored likelihood families are supported, but unfortunately the Gaussian family is not one of them:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -13239,7 +13208,7 @@ font-style: inherit;">sqrt</span>(mean))</span></code></pre></div>
 </div>
 </div>
 <p>You can also access the posterior through <code>INLA::inla.posterior.sample</code>.</p>
-<p>Compared to {brms}, {INLA} needs much stronger priors on random intercepts in a censored (lognormal) model in my experience. I have yet to encounter a real-life scenario where it could reliably do with a noninformative prior. Perhaps this is simply a consequence of the lognormal family or the combination of the lognormal family and some parameter space definition difference I’m not aware of, but I often have had to specify priors like these</p>
+<p>In my experience, {INLA} needs – compared to {brms} – much stronger priors on random intercept terms in a censored (lognormal) model. I have yet to encounter a real-life scenario where it could reliably do with a noninformative prior. Perhaps this is simply a consequence of the lognormal family or the combination of the lognormal family and some parameter space definition difference I’m not aware of, but I often have had to specify priors like these</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1">halfcauchy  <span class="ot" style="color: #003B4F;
 background-color: null;
@@ -13315,12 +13284,12 @@ font-style: inherit;">config =</span> <span class="cn" style="color: #8f5902;
 background-color: null;
 font-style: inherit;">TRUE</span>))</span></code></pre></div>
 </div>
-<p>for good frequentist coverage properties – with less strong priors there would be huge outliers where some simulations had an estimated mean a couple magnitudes higher.</p>
+<p>for good frequentist coverage properties – with less strong priors there would be huge outliers where some simulations had an estimated mean a couple magnitudes higher than expected.</p>
 </section>
 </section>
 <section id="other-packages" class="level2">
 <h2 class="anchored" data-anchor-id="other-packages">Other packages</h2>
-<p>There are <a href="https://cran.r-project.org/web/views/MixedModels.html">other packages available</a> to fit these kinds of models that I have not covered here: {nlmixr2}, {ARpLMEC}, {lme4cens}, {gamlss} (supposedly also multilevel?), and {lmec} but they are either minimally used and validated<sup>10</sup>, or were somewhat clunky to use for me. There’s also talks to support censored regression models in <a href="https://github.com/glmmTMB/glmmTMB/issues/690">{glmmTMB}</a>. And there’s the {AER} package, but it seems like that is just a <a href="https://m-clark.github.io/models-by-example/tobit.html">wrapper</a> for the {survival} library with less functionality (i.e.&nbsp;no varying censoring points).</p>
+<p>There are <a href="https://cran.r-project.org/web/views/MixedModels.html">other packages available</a> to fit these kinds of models that I have not covered here: {nlmixr2}, {ARpLMEC}, {lme4cens}, {gamlss} (supposedly also multilevel?), and {lmec} but they are either minimally used or minimally validated<sup>10</sup>, or were somewhat clunky to use for me. There’s also talks to support censored regression models in <a href="https://github.com/glmmTMB/glmmTMB/issues/690">{glmmTMB}</a>. And there’s the {AER} package, but it seems like that is just a <a href="https://m-clark.github.io/models-by-example/tobit.html">wrapper</a> for the {survival} library with less functionality (i.e.&nbsp;no varying censoring points).</p>
 
 
 
@@ -13351,8 +13320,8 @@ Senn, Stephen, Nick Holford, and Hans Hockey. 2012. <span>“The Ghosts of Depar
 
 <ol>
 <li id="fn1"><p>Not to be confused with left truncation. In both truncation and censoring no information on the value of the observation beyond the truncation/censoring point is available. However, with censoring we know the number of observations beyond this point contrary to truncation where we do not observe any of the dependent variable or covariates – the entry is simply missing from your data table. See for example <span class="citation" data-cites="senn2012ghosts">Senn, Holford, and Hockey (2012)</span> and <span class="citation" data-cites="gelman2013bayesian">Andrew Gelman et al. (2013)</span>, p.224 for a more in depth explanation on the statistical connections between truncation and censoring.↩︎</p></li>
-<li id="fn2"><p>While I have not encountered it myself, I have read that (some) mass spectrometry instruments can also reach saturation. This will not be the topic of this post. I think though that saturation would introduce an additional right censoring mechanism or some type of non-linear effect – again not sure how this gets handled in practice.↩︎</p></li>
-<li id="fn3"><p>In this post we assume the limit of detection is known, but this need not always be the case. See for example <span class="citation" data-cites="gelman2013bayesian">Andrew Gelman et al. (2013)</span>, p.226 on how to handle this.↩︎</p></li>
+<li id="fn2"><p>While I have not encountered it myself, I have read that (some) mass spectrometry instruments can also reach saturation. This will not be the topic of this post. I think, however, that saturation would introduce an additional right-censoring mechanism or some type of non-linear effect – though again, I’m not sure how this is handled in practice.↩︎</p></li>
+<li id="fn3"><p>In this post we assume the limit of detection is known, but this need not always be the case. You can of course model this too as an unknown random variable. See for example <span class="citation" data-cites="gelman2013bayesian">Andrew Gelman et al. (2013)</span>, p.226 on how to handle this.↩︎</p></li>
 <li id="fn4"><p>The classical tobit model from economics <a href="https://rdrr.io/cran/AER/man/tobit.html">assumes a normal distribution for outcome variable with left-censoring at 0</a>.↩︎</p></li>
 <li id="fn5"><p>Via <span class="citation" data-cites="gelman2006data">A. Gelman and Hill (2006)</span> and <a href="https://m-clark.github.io/models-by-example/tobit.html">Michael Clark</a> his post.↩︎</p></li>
 <li id="fn6"><p>Though there seem to be some questions on if {censReg} is doing it <a href="https://stat.ethz.ch/pipermail/r-sig-mixed-models/2021q3/029715.html">correctly</a> (per the author of the {GLMMadaptive} package).↩︎</p></li>

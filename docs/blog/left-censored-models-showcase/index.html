@@ -9,7 +9,7 @@
 <meta name="author" content="Max J. Oosterwegel">
 <meta name="dcterms.date" content="2025-04-21">
 
-<title>A guide to fitting left-censored models with R – Max Oosterwegel – blog ( ._.)</title>
+<title>A guide to fitting left-censored models with R – Max Oosterwegel – blog</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -157,11 +157,6 @@ window.Quarto = {
 <span class="menu-text">home</span></a>
   </li>  
   <li class="nav-item">
-    <span class="nav-link">
-<span class="menu-text">paper roll</span>
-    </span>
-  </li>  
-  <li class="nav-item">
     <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">about</span></a>
   </li>  
@@ -231,10 +226,10 @@ window.Quarto = {
 </header>
 
 
-<p>In environmental epidemiology – and environmental studies more generally – we often aim to detect trace levels of pollutants, metabolites, or biomarkers. Be it in a biospecimen like blood and urine or in environmental media such as soil, water, and air. This can be done with <a href="https://en.wikipedia.org/wiki/Gas_chromatography%E2%80%93mass_spectrometry">liquid/gas chromatography mass spectrometry instruments</a> among others. Even though these instruments are very sensitive these days, they will sometimes hit their detection limits. This blog posts will briefly go over on how to handle such data statistically speaking, and what options are available in <code>R</code> to fit these models.</p>
+<p>In environmental epidemiology – and environmental studies more generally – we often aim to detect trace levels of pollutants, metabolites, or biomarkers. This can be done with for example <a href="https://en.wikipedia.org/wiki/Gas_chromatography%E2%80%93mass_spectrometry">liquid/gas chromatography mass spectrometry instruments</a>, be it in a biospecimen like blood and urine or in environmental media such as soil, water, and air. And even though these instruments are very sensitive these days, they will sometimes hit their detection limits. This blog post will briefly go over how to handle such data statistically speaking, and what options are available in <code>R</code> to fit these models.</p>
 <section id="censoring" class="level1">
 <h1>Censoring</h1>
-<p>Every epidemiologist is familiar with the standard survival analysis example that describes right censored observations. In this example, some participants are lost to follow-up or do not experience the event during the study. As a result, for these participants we only know that a possible event occurred somewhere after our observation period. These observations are then said to be right censored at the end of this window.</p>
+<p>Every epidemiologist is familiar with the standard survival analysis example that describes right-censored observations. In this example, some participants are lost to follow-up or do not experience the event during the study. As a result, for these participants we only know that a possible event occurred somewhere after our observation period. These observations are then said to be right-censored at the end of this window.</p>
 <p>With the aforementioned instruments, the situation is flipped: we only know a value is <em>less</em> than a certain value. In these cases, our instrument can’t discern the analyte from background noise below a certain point. In other words, measurements on such an instrument were limited to a minimum measurement of <span class="math inline">\(l\)</span> so any measurement smaller than <span class="math inline">\(l\)</span> was recorded as <span class="math inline">\(l\)</span>. We refer to this minimum measurement as the limit of detection or limit of quantification and the data is said to be left-censored at this limit<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. Measurements smaller than this simply cannot be measured with this instrument.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
 <p>Writing this in a more formal way, we can specify a latent regression model with an outcome that is either observed or unobserved:</p>
 <p><span class="math display">\[
@@ -396,7 +391,7 @@ y_i^*= \begin{cases}\mathrm{N}\left(y_i \mid a+b x_i, \sigma^2\right) &amp; \tex
 <p>Of course there are also <code>R</code> packages that can do such a procedure for us. Both frequentist and Bayesian. Below an overview:</p>
 <section id="survival" class="level3">
 <h3 class="anchored" data-anchor-id="survival">{survival}</h3>
-<p>In {survival} you can specify left-censored models just as you would specify right censored models using the <code>Surv</code> object. The <code>censor_point</code> can also be a vector and thereby allow your observations to be censored at different levels/limits.</p>
+<p>In {survival} you can specify left-censored models just as you would specify your right-censored survival models using the <code>Surv</code> object. The only difference being that we assume a regular Gaussian distribution here for the outcome. Moreover we need to specify which data is left-censored and at what point. This <code>censor_point</code> can also be a vector and thereby allow your observations to be censored at different levels/limits.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> survival<span class="sc">::</span><span class="fu">survreg</span>(survival<span class="sc">::</span><span class="fu">Surv</span>(y_obs,</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                                      y_obs <span class="sc">&gt;</span> censor_point,</span>
@@ -490,8 +485,7 @@ Log-likelihood: -1587.58 on 3 Df</code></pre>
 </section>
 <section id="multilevel-left-censored-models" class="level2">
 <h2 class="anchored" data-anchor-id="multilevel-left-censored-models">Multilevel left-censored models</h2>
-<p>Sometimes your data is more complicated and you want to specify different levels of your data. For example: a random intercept that specifies what subject or batch an observation belongs to. Your <code>R</code> package options are more limited then, as the frequentist approach now needs to additionally integrate over the random effects in the definition of the marginal likelihood.</p>
-<p>The {survival} model does not support such models while {censReg} supports only a simple two-level random intercept model:</p>
+<p>Sometimes your data is more complicated and you want to specify different levels of your data. For example: a random intercept that specifies what subject or batch an observation belongs to. Your <code>R</code> package options are more limited then, as the frequentist approach now needs to additionally integrate over the random effects in the definition of the marginal likelihood. The {survival} model does not support such models while {censReg} supports only a simple two-level random intercept model:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>samples_p_batch <span class="ot">&lt;-</span> <span class="dv">100</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>nr_batches <span class="ot">&lt;-</span> n<span class="sc">/</span>samples_p_batch</span>
@@ -593,7 +587,7 @@ method: hybrid EM and quasi-Newton
 converged: TRUE </code></pre>
 </div>
 </div>
-<p>We can also use random slopes in GLMMadaptive. But only a single grouping factor (i.e., no nested (i.e.&nbsp;2+ levels) or crossed random effects designs) is <a href="https://cran.r-project.org/web/packages/GLMMadaptive/vignettes/GLMMadaptive.html">supported</a> at the moment. {GLMMadaptive} is relatively fast. Unfortunately, when I had to fit more than 20 of these models for projects at least one of those models had convergence issues/errors. But perhaps someone with more feel for optimizer parameters is more successful.</p>
+<p>We can also use random slopes in GLMMadaptive. But only a single grouping factor (i.e., no nested (i.e.&nbsp;2+ levels) or crossed random effects designs) is <a href="https://cran.r-project.org/web/packages/GLMMadaptive/vignettes/GLMMadaptive.html">supported</a> at the moment. {GLMMadaptive} is relatively fast. Unfortunately, when I had to fit more than 20 of these models for projects at least one of those models had convergence issues/errors. But perhaps someone with more feel for optimizer parameters is more successful in fitting these models at scale.</p>
 <p>And contrary to {censReg} you can extract the random effects:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>GLMMadaptive<span class="sc">::</span><span class="fu">ranef</span>(m) <span class="sc">|&gt;</span> <span class="fu">head</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -610,7 +604,7 @@ converged: TRUE </code></pre>
 </section>
 <section id="brms-stan" class="level3">
 <h3 class="anchored" data-anchor-id="brms-stan">{brms} / {STAN}</h3>
-<p>For Bayesian software implementations the addition of random intercepts and slopes is less challenging, because it avoids the cumbersome integration. Similarly to {GLMMadaptive} we specify an additional indicator variable for our {brms} model, but this time left-censoring is indicated by <span class="math inline">\(-1\)</span> (uncensored is <span class="math inline">\(0\)</span> in <code>brms</code> and <span class="math inline">\(1\)</span> indicates right censoring):</p>
+<p>The addition of random intercepts and slopes is less challenging in a Bayesian framework, because it avoids the cumbersome integration. Similarly to {GLMMadaptive} we specify an additional indicator variable for our {brms} model, but this time left-censoring is indicated by <span class="math inline">\(-1\)</span> (uncensored is <span class="math inline">\(0\)</span> in <code>brms</code> and <span class="math inline">\(1\)</span> indicates right-censoring):</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> brms<span class="sc">::</span><span class="fu">brm</span>(y_obs <span class="sc">|</span> <span class="fu">cens</span>(censored) <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> x <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>batch_id), </span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> df <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">censored =</span> censored <span class="sc">*</span> <span class="sc">-</span><span class="dv">1</span>), </span>
@@ -767,11 +761,11 @@ generated quantities {
 }</code></pre>
 </div>
 </div>
-<p>With {brms} the possibilities are almost endless<a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> and fortunately its speed has also improved the last few years. My censored models usually converge out of the box, even with multiple random intercept terms. And with some reasonably strong priors I’ve also had success with high proportions of censored data (say &gt;80%).</p>
+<p>With {brms} the possibilities are almost endless<a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> and fortunately its speed has also noticeably improved the last few years. My censored models usually converge out of the box, even with multiple random intercept terms. And with some reasonably strong priors I’ve also had success with high proportions of censored data (say &gt;80%) and multiple interaction terms.</p>
 </section>
 <section id="mcmcglmm" class="level3">
 <h3 class="anchored" data-anchor-id="mcmcglmm">{MCMCglmm}</h3>
-<p>{MCMCglmm} also supports left-censored multilevel (&gt;two-level?) models. The random effect notation is a bit <a href="https://stat.ethz.ch/pipermail/r-sig-mixed-models/2013q1/019896.html">different</a> though. The intercept is varying by subject here (random intercept), <code>random = ~us(1+fixed_effect):cluster</code> gives a random intercept/slope model with estimated covariance, and <code>random = ~idh(1+fixed_effect):cluster</code> is the same but with the covariance set to 0. We can specify a left-censored outcome by creating two variables. If left-censored, <code>y_obs_min</code> is <code>-Inf</code> and <code>y_obs_max</code> takes on the value of the censoring point, in the other, non censored cases <code>y_obs_min</code> and <code>y_obs_max</code> are identical and take on the observed value:</p>
+<p>{MCMCglmm} also supports left-censored multilevel (&gt;two-level?) models. The random effect notation is a bit <a href="https://stat.ethz.ch/pipermail/r-sig-mixed-models/2013q1/019896.html">different</a> though. The intercept is varying by subject here (random intercept), <code>random = ~us(1+fixed_effect):cluster</code> gives a random intercept/slope model with estimated covariance, and <code>random = ~idh(1+fixed_effect):cluster</code> is the same but with the covariance set to 0. We can specify a left-censored outcome by creating two variables. If left-censored, <code>y_obs_min</code> is <code>-Inf</code> and <code>y_obs_max</code> takes on the value of the censoring point. In the other, non censored cases <code>y_obs_min</code> and <code>y_obs_max</code> are identical and take on the observed value:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MCMCglmm)</span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -827,7 +821,7 @@ units    0.4978472 0.009719887 9.719887e-05   0.0002157377</code></pre>
 </section>
 <section id="inla" class="level3">
 <h3 class="anchored" data-anchor-id="inla">{INLA}</h3>
-<p>Lastly I want to mention the {INLA} package. It seems like it’s neither purely frequentist nor fully Bayesian but instead <em>approximates</em> the posterior marginals. It’s mostly used in spatial statistics so perhaps this makes it the ideal candidate for censored concentration measurements with a spatial element, say a measurement campaign. Its interface is slightly unusual for the <code>R</code> regression packages I’m familiar with, but it is very, very fast! Many censored likelihood families are supported, but unfortunately the Gaussian family is not one of them:</p>
+<p>Lastly, I want to mention the {INLA} package. It seems like it’s neither purely frequentist nor fully Bayesian but instead <em>approximates</em> the posterior marginals. It’s mostly used in spatial statistics so perhaps this makes it the ideal candidate for censored concentration measurements with a spatial element, such as data from a measurement campaign. Its interface is slightly unusual compared to the <code>R</code> regression packages I’m familiar with, but it is very, very fast! Many censored likelihood families are supported, but unfortunately the Gaussian family is not one of them:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(INLA<span class="sc">::</span><span class="fu">inla.models</span>()<span class="sc">$</span>likelihood) <span class="sc">|&gt;</span> </span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">keep</span>(<span class="sc">~</span>stringr<span class="sc">::</span><span class="fu">str_detect</span>(.x, <span class="st">"surv"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -936,7 +930,7 @@ Posterior summaries for the linear predictor and the fitted values are computed
 </div>
 </div>
 <p>You can also access the posterior through <code>INLA::inla.posterior.sample</code>.</p>
-<p>Compared to {brms}, {INLA} needs much stronger priors on random intercepts in a censored (lognormal) model in my experience. I have yet to encounter a real-life scenario where it could reliably do with a noninformative prior. Perhaps this is simply a consequence of the lognormal family or the combination of the lognormal family and some parameter space definition difference I’m not aware of, but I often have had to specify priors like these</p>
+<p>In my experience, {INLA} needs – compared to {brms} – much stronger priors on random intercept terms in a censored (lognormal) model. I have yet to encounter a real-life scenario where it could reliably do with a noninformative prior. Perhaps this is simply a consequence of the lognormal family or the combination of the lognormal family and some parameter space definition difference I’m not aware of, but I often have had to specify priors like these</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>halfcauchy  <span class="ot">=</span> <span class="st">"expression:</span></span>
 <span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="st">  sigma = exp(-theta/2);</span></span>
@@ -952,12 +946,12 @@ Posterior summaries for the linear predictor and the fitted values are computed
 <span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a>          <span class="at">data =</span> df, <span class="at">family =</span> <span class="st">"lognormal.surv"</span>, </span>
 <span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a>          <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>for good frequentist coverage properties – with less strong priors there would be huge outliers where some simulations had an estimated mean a couple magnitudes higher.</p>
+<p>for good frequentist coverage properties – with less strong priors there would be huge outliers where some simulations had an estimated mean a couple magnitudes higher than expected.</p>
 </section>
 </section>
 <section id="other-packages" class="level2">
 <h2 class="anchored" data-anchor-id="other-packages">Other packages</h2>
-<p>There are <a href="https://cran.r-project.org/web/views/MixedModels.html">other packages available</a> to fit these kinds of models that I have not covered here: {nlmixr2}, {ARpLMEC}, {lme4cens}, {gamlss} (supposedly also multilevel?), and {lmec} but they are either minimally used and validated<a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>, or were somewhat clunky to use for me. There’s also talks to support censored regression models in <a href="https://github.com/glmmTMB/glmmTMB/issues/690">{glmmTMB}</a>. And there’s the {AER} package, but it seems like that is just a <a href="https://m-clark.github.io/models-by-example/tobit.html">wrapper</a> for the {survival} library with less functionality (i.e.&nbsp;no varying censoring points).</p>
+<p>There are <a href="https://cran.r-project.org/web/views/MixedModels.html">other packages available</a> to fit these kinds of models that I have not covered here: {nlmixr2}, {ARpLMEC}, {lme4cens}, {gamlss} (supposedly also multilevel?), and {lmec} but they are either minimally used or minimally validated<a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>, or were somewhat clunky to use for me. There’s also talks to support censored regression models in <a href="https://github.com/glmmTMB/glmmTMB/issues/690">{glmmTMB}</a>. And there’s the {AER} package, but it seems like that is just a <a href="https://m-clark.github.io/models-by-example/tobit.html">wrapper</a> for the {survival} library with less functionality (i.e.&nbsp;no varying censoring points).</p>
 
 
 
@@ -988,8 +982,8 @@ Senn, Stephen, Nick Holford, and Hans Hockey. 2012. <span>“The Ghosts of Depar
 
 <ol>
 <li id="fn1"><p>Not to be confused with left truncation. In both truncation and censoring no information on the value of the observation beyond the truncation/censoring point is available. However, with censoring we know the number of observations beyond this point contrary to truncation where we do not observe any of the dependent variable or covariates – the entry is simply missing from your data table. See for example <span class="citation" data-cites="senn2012ghosts">Senn, Holford, and Hockey (<a href="#ref-senn2012ghosts" role="doc-biblioref">2012</a>)</span> and <span class="citation" data-cites="gelman2013bayesian">Andrew Gelman et al. (<a href="#ref-gelman2013bayesian" role="doc-biblioref">2013</a>)</span>, p.224 for a more in depth explanation on the statistical connections between truncation and censoring.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn2"><p>While I have not encountered it myself, I have read that (some) mass spectrometry instruments can also reach saturation. This will not be the topic of this post. I think though that saturation would introduce an additional right censoring mechanism or some type of non-linear effect – again not sure how this gets handled in practice.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn3"><p>In this post we assume the limit of detection is known, but this need not always be the case. See for example <span class="citation" data-cites="gelman2013bayesian">Andrew Gelman et al. (<a href="#ref-gelman2013bayesian" role="doc-biblioref">2013</a>)</span>, p.226 on how to handle this.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>While I have not encountered it myself, I have read that (some) mass spectrometry instruments can also reach saturation. This will not be the topic of this post. I think, however, that saturation would introduce an additional right-censoring mechanism or some type of non-linear effect – though again, I’m not sure how this is handled in practice.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>In this post we assume the limit of detection is known, but this need not always be the case. You can of course model this too as an unknown random variable. See for example <span class="citation" data-cites="gelman2013bayesian">Andrew Gelman et al. (<a href="#ref-gelman2013bayesian" role="doc-biblioref">2013</a>)</span>, p.226 on how to handle this.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn4"><p>The classical tobit model from economics <a href="https://rdrr.io/cran/AER/man/tobit.html">assumes a normal distribution for outcome variable with left-censoring at 0</a>.<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn5"><p>Via <span class="citation" data-cites="gelman2006data">A. Gelman and Hill (<a href="#ref-gelman2006data" role="doc-biblioref">2006</a>)</span> and <a href="https://m-clark.github.io/models-by-example/tobit.html">Michael Clark</a> his post.<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn6"><p>Though there seem to be some questions on if {censReg} is doing it <a href="https://stat.ethz.ch/pipermail/r-sig-mixed-models/2021q3/029715.html">correctly</a> (per the author of the {GLMMadaptive} package).<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>

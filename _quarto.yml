@@ -10,8 +10,8 @@ resources:
   - fonts
 
 website:
-  title: "Max Oosterwegel -- blog ( ._.)"
-  description: "Blog Max Oosterwegel ( ._.)"
+  title: "Max Oosterwegel -- blog"
+  description: "Blog Max Oosterwegel"
   site-url: https://maxoosterwegel.com
   repo-url: https://github.com/moosterwegel/quarto-website
   search: false
@@ -35,7 +35,6 @@ website:
       - text: "home"
         href: index.qmd
      # - text: "teaching" 
-      - text: "paper roll"
       - text: "about"
         href: about.qmd
     right:
