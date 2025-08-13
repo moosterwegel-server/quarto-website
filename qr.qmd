@@ -4,6 +4,6 @@ format: html
 ---
 
 ```{=html}
-<meta http-equiv="refresh" content="0; url=/about.html">
-<link rel="canonical" href="/about.html">
-<p>If you are not redirected automatically, follow this <a href='[maxoosterwegel.com/about](maxoosterwegel.com/about)'>link</a>.</p>
+<meta http-equiv="refresh" content="0; url=/hire_me.html">
+<link rel="canonical" href="/hire_me.html">
+<p>If you are not redirected automatically, follow this <a href='[maxoosterwegel.com/about](maxoosterwegel.com/hire_me)'>link</a>.</p>

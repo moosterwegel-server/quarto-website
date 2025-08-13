@@ -1,0 +1,56 @@
+---
+title: "hire me!"
+css: progress_bar.css
+comments: false
+---
+
+<style>
+.justify {
+  text-align: justify !important;
+}
+</style>
+
+<style>
+.small-font {
+  font-size: 0.75rem; 
+}
+</style>
+
+:::: {.columns}
+
+::: {.column width="65%"}
+::: {.justify}
+In the coming year, I am completing my PhD in environmental epidemiology. In this PhD I have used metabolomic and exposomic data to investigate respiratory diseases and biological responses to environmental stresses, while also evaluating the methodological aspects of metabolomics as an epidemiological tool. Working under Roel Vermeulen and Jelle Vlaanderen within the EXPANSE and EXPOSOME-NL consortia, I developed the statistical plan template for six metabolomic studies across EXPANSE, with papers currently in preparation. I have also designed and taught modules for Molecular Epidemiology and Exposure Assessment master courses.
+
+My doctoral training has built deep expertise in metabolomics, exposomics, environmental epidemiology, and study design. I bring additional strength in data science through my master's in computing science and bachelor's in artificial intelligence, enabling me to handle complex analytical challenges with methodological precision.
+
+I am committed to rigorous, open science that addresses epidemiologically sound and socially relevant research questions.
+:::
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column width="30%"}
+::: {.small-font}
+![](profile.jpg)
+
+<div class="progress-container">
+  <div class="progress-bar" style="width: 80%;">80%</div>
+</div> 
+**PhD in Environmental Epidemiology <br> [2021 -- ]** <br>
+_Utrecht University (IRAS), Utrecht_ <br>
+
+**MSc Postgraduate Epidemiology <br> [2022 -- 2025]** <br>
+_Utrecht University, Utrecht_ <br>
+
+**MSc Computing Science <br> [2018 -- 2020]** <br>
+_Radboud University, Nijmegen_ <br>
+
+**BSc Artificial Intelligence <br> [2015 -- 2018]** <br>
+_Radboud University, Nijmegen_
+:::
+:::
+
+::::
+
