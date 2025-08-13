@@ -16,9 +16,18 @@ comments: false
 }
 </style>
 
-:::: {.columns}
+<style>
+.profile-img img {
+  max-width: 90%; 
+  display: block;      
+  margin-left: auto;  
+  margin-right: auto;
+}
+</style>
 
-::: {.column width="65%"}
+::: {.grid}
+
+::: {.g-col-12 .g-col-md-8}
 ::: {.justify}
 In the coming year, I am completing my PhD in environmental epidemiology. In this PhD I have used metabolomic and exposomic data to investigate respiratory diseases and biological responses to environmental stresses, while also evaluating the methodological aspects of metabolomics as an epidemiological tool. Working under Roel Vermeulen and Jelle Vlaanderen within the EXPANSE and EXPOSOME-NL consortia, I developed the statistical plan template for six metabolomic studies across EXPANSE, with papers currently in preparation. I have also designed and taught modules for Molecular Epidemiology and Exposure Assessment master courses.
 
@@ -28,17 +37,18 @@ I am committed to rigorous, open science that addresses epidemiologically sound 
 :::
 :::
 
-::: {.column width="5%"}
-:::
+::: {.g-col-12 .g-col-md-4}
 
-::: {.column width="30%"}
 ::: {.small-font}
+
+::: {.profile-img}
 ![](profile.jpg)
+:::
 
 <div class="progress-container">
   <div class="progress-bar" style="width: 80%;">80%</div>
 </div> 
-**PhD in Environmental Epidemiology <br> [2021 -- ]** <br>
+**PhD in Environmental Epidemiology <br> [2021 --] ** <br>
 _Utrecht University (IRAS), Utrecht_ <br>
 
 **MSc Postgraduate Epidemiology <br> [2022 -- 2025]** <br>
@@ -51,6 +61,4 @@ _Radboud University, Nijmegen_ <br>
 _Radboud University, Nijmegen_
 :::
 :::
-
-::::
-
+:::
