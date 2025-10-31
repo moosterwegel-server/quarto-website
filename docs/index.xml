@@ -10,7 +10,301 @@
 <atom:link href="https://maxoosterwegel.com/index.xml" rel="self" type="application/rss+xml"/>
 <description>Blog Max Oosterwegel</description>
 <generator>quarto-1.7.27</generator>
-<lastBuildDate>Tue, 12 Aug 2025 22:00:00 GMT</lastBuildDate>
+<lastBuildDate>Thu, 30 Oct 2025 23:00:00 GMT</lastBuildDate>
+<item>
+  <title>Can we use mendelian randomization to learn about the causal effects of chemical exposures on our health?</title>
+  <dc:creator>Max J. Oosterwegel</dc:creator>
+  <link>https://maxoosterwegel.com/blog/mr-chemical-agents/</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>With the expected continued scaling of high-throughput mass spectrometry, many participants of cohort studies will not only have genetic information available, but also have exposure-related information. Can we use high-throughput exposure data to apply mendelian randomization (MR) for environmental chemicals? In this blog post I briefly go over MR, the assumptions most relevant to chemical exposures, and what exposure information can add.</p>
+<div class="{=html}">
+<script type="text/javascript" src="../../js/prototype.js"></script>
+<script type="text/javascript" src="../../js/dagitty-3.0.js"></script>
+<pre class="dagitty" style="height: 140px;">dag {
+bb="0,0,1,1"
+G [pos="0.1,0.6"]
+U [pos="0.6,0.3"]
+X [exposure,pos="0.4,0.6"]
+Y [outcome,pos="0.8,0.6"]
+G -&gt; X
+U -&gt; X
+U -&gt; Y
+X -&gt; Y
+}
+</pre>
+<script type="text/javascript">
+  window.addEventListener("load", function() {
+    DAGitty.setup();
+  });
+</script>
+</div>
+<section id="mr" class="level1">
+<h1>MR</h1>
+<p>MR uses instrumental variables to estimate causal effects for exposures on health and other personal outcomes. More specifically, MR uses the fact that conditional on parental genotypes, alleles are randomly allocated from parents to offspring.<sup>1</sup> If we can find alleles that are reliably related to our exposure of interest, we can – under strict assumptions (Box 1) – use the random assignment of this gene as an instrument to infer the causal effect of an exposure on an outcome.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Box 1: MR assumptions
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<section id="assumptions-classical-iv" class="level2">
+<h2 class="anchored" data-anchor-id="assumptions-classical-iv">Assumptions classical IV</h2>
+<ol type="1">
+<li>Relevance: the genetic instrument (G) must be robustly associated with the exposure (X).</li>
+<li>Exchangeability (also known as independence): the genetic instrument (G) must not share any common causes (confounders) with the outcome (Y).</li>
+<li>Exclusion restriction: the genetic instrument (G) must affect the outcome (Y) only through its effect on the exposure (X). Any pathway from the instrument to the outcome that bypasses the exposure (e.g., via horizontal pleiotropy, where one gene influences multiple traits) violates this assumption.</li>
+</ol>
+</section>
+<section id="additional-assumptions-for-estimation-interpretation-of-mr" class="level2">
+<h2 class="anchored" data-anchor-id="additional-assumptions-for-estimation-interpretation-of-mr">Additional assumptions for estimation &amp; interpretation of MR</h2>
+<ol type="1">
+<li>Gene-environment equivalency: hypothetically changing exposure through a change in genotype or a change in environment should produce the same effect on the outcome. Conceptually comparable to the consistency assumption in the standard causal inference literature.</li>
+<li>Homogeneity or monotonicity: no potential differences in the causal effect among individuals. Homogeneity assumes the exposure’s effect on the outcome is uniform across the entire population. Monotonicity is a less strict assumption as it only requires that the genetic instrument’s effect on the exposure goes in one direction (e.g., it increases the exposure for everyone it affects; it doesn’t decrease it for some).</li>
+</ol>
+<p>Please see <span class="citation" data-cites="sanderson_mendelian_2022">Sanderson et al. (2022)</span> and <span class="citation" data-cites="richmond_mendelian_2022">Richmond and Smith (2022)</span> for details.</p>
+</section>
+</div>
+</div>
+</div>
+<p>MR has proved its value for evidence synthesis in studies of high-density lipoprotein cholesterol (HDL-C) and coronary heart disease. In these studies, a range of genetic variants that affect the level of HDL-C were used to test whether HDL-C decreases the risk of coronary heart disease.<sup>2</sup> Many of the exposures we study in environmental epidemiology, however, are a different kind of exposure than HDL-C: the body does not produce these exposures; genetic variation can only influence how the body handles the exposure upon entry. Can we still use MR with such exposures?</p>
+<p>Yes, this difference is not relevant to MR as researchers have famously used the variation in two genes involved in alcohol metabolism – ALDH2 and ADH1B – to instrument the effect of alcohol consumption on cardiovascular diseases. Variation in these genes reduces consumption (by causing an unpleasant physical reaction to alcohol) and as such there is a clear gene-environment equivalency<sup>3</sup>. This means that hypothetically changing exposure through a change in genotype or a change in environment should produce the same effect on the outcome. Such exact mimicking may be less clear for many other environmental exposures as there is no genetic variant for <em>using</em> (or being <em>externally</em> exposed to) environmental chemicals such as PFAS.<sup>4</sup> This may complicate their causal effect interpretation, but that does not mean all is lost: we can still use MR to generate (qualitative) evidence by performing tests instead of estimating effects.<sup>5</sup></p>
+<p>And this has also been done numerous times for our chemical exposures of interest. For example, <span class="citation" data-cites="cherry_paraoxonase_2002">Cherry et al. (2002)</span> found that the paraoxonase (PON1) enzyme hydrolyses diazinonoxon – a potentially toxic component found in an organophosphate used in sheep dip. Importantly, they also found a genetic variant associated with PON1 and thus lower detoxification. This variant could then serve as proxy for <em>internal</em> exposure to sheep dip and help us investigate the causal effect of sheep dip on health. Similarly, researchers have used genetic variation in the NAT2 gene that is involved in the detoxification pathway of carcinogens to triangulate the evidence of smoking on bladder cancer (<span class="citation" data-cites="garcia-closas_nat2_nodate">García-Closas et al. (2005)</span>), and two SNPs impacting arsenic metabolism efficiency were used to test the causal effect of arsenic exposure on skin lesions (<span class="citation" data-cites="pierce_arsenic_2013">Pierce et al. (2013)</span>).</p>
+</section>
+<section id="gene-environment-interactions" class="level1">
+<h1>Gene-environment interactions</h1>
+<p>The papers on sheep dip and smoking did not mention MR. If placed in a general framework, it’s usually gene-environment interaction, not MR. However, we can think of many of these genetic instruments in MR as a gene-environment interaction.<sup>6</sup> Ideally, this would be a gene-environment interaction without an independent gene effect. In other words, the association of the gene with the outcome is only visible in the presence of the exposure. These gene-environment interactions affect metabolism of exposure<sup>7</sup> by affecting absorption, distribution, metabolism, and excretion (ADME) characteristics of the targeted exposure (<span class="citation" data-cites="ritz_lessons_2017">Ritz et al. (2017)</span>). Thereby, they affect the susceptibility of an individual and can serve as a proxy for internal exposure to the environmental exposure of interest which – in exposure assessment and epidemiology – is ultimately what we care about.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Box 2: Metabolism of environmental chemicals
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>The body’s strategy for “handling” an environmental chemical (a xenobiotic) depends on its chemical nature. Substances that are already water-soluble, such as many metals, generally rely on rapid transport and excretion through the kidneys or intestinal tract. Environmental chemicals such as PCBs and PAHs are fat-soluble, however, allowing them to pass through cell membranes and bioaccumulate in fatty/lipid-rich tissues. Because they aren’t water-soluble, they cannot be easily excreted by the kidneys. In a three-phase process they are made water-soluble that allows excretion:</p>
+<ol type="1">
+<li>Phase I (modification): enzymes, most famously the Cytochrome P450 (CYP450) superfamily (abundant in the liver), perform oxidation to add a reactive group. However, this initial modification can sometimes activate the xenobiotic, converting it into a reactive electrophile or free radical that is more toxic than the original compound.</li>
+<li>Phase II (conjugation): enzymes like NAT2 or GST attach a large water-soluble “tag” (e.g., glutathione) to the reactive group, neutralizing it.</li>
+<li>Phase III (transport – not always included in classical model, but polymorphisms in transporters may also contribute to differences in metabolism): transporters (like on the cell’s surface) then actively pump this new, large, water-soluble metabolite out of the cell and into the bile or blood, where it can be eliminated by the kidneys.</li>
+</ol>
+<p>Water-soluble substances, like many heavy metals and metalloids (e.g., arsenic) – which are inducers of oxidative stress and cellular damage – don’t need Phase I to dissolve, but they still need to be detoxified and actively transported. They often use the Phase II (conjugation) and Phase III (transport) mechanisms directly. For example, arsenic is made less toxic and is “tagged” for excretion by adding methyl groups (a Phase II conjugation reaction).</p>
+<p>This three-phase system (for fat-soluble chemicals) is part of a broader environmental response machinery. <span class="citation" data-cites="motsinger-reif_gene-environment_2024">Motsinger-Reif et al. (2024)</span>, table 3 highlights other gene classes that respond to the presence of environmental chemicals or the damage they cause. These damage-response pathways are highly relevant for all environmental exposures – both the fat-soluble chemicals and water-soluble substances like heavy metals.</p>
+</div>
+</div>
+</div>
+<p>When we only want to test for and not estimate an effect though, we do not even need exposure information!<sup>8</sup> We only need genetic variant and outcome data to implicate specific exposures in the etiology of a disease. In fact, this was what Katan proposed in his early writing on MR (e.g. <span class="citation" data-cites="katan_apolipoprotein_1986">Katan (1986)</span>) where he described an approach that examined the association between genetic variants and the outcome to test for an effect of the exposure on the outcome. This is precisely what <span class="citation" data-cites="carol_ann_gross-davis_role_2015">Carol Ann Gross-Davis et al. (2015)</span> did. Namely, they conducted a case-control study of myeloproliferative neoplasms (MPNs) where they genotyped cases and controls for variants in ‘environmentally sensitive genes’. They found that certain genotypes, such as the NAT2 slow acetylator genotype and variants in CYP1A2, GSTA1, and GSTM3, were associated with a 3–5-fold increased risk of MPNs. Based on these “gene-only” associations, they concluded that the environmental exposures whose toxicity is modified by these specific genes, like aromatic compounds, may play a role in the etiology of MPNs.</p>
+<p>However, importantly, they could not implicate a specific chemical, because the chemicals they studied share metabolism. In MR terms we would say that there is horizontal pleiotropy<sup>9</sup> where the variant affects the outcome through other variables than a specific, single exposure (see below for an illustration). In general, this is a big hurdle for MR for environmental chemicals.</p>
+<div class="{=html}">
+<script type="text/javascript" src="../../js/prototype.js"></script>
+<script type="text/javascript" src="../../js/dagitty-3.0.js"></script>
+<pre class="dagitty" style="height: 140px;">dag {
+bb="0,0,1,1"
+"metabolism of 2,4'-DDT" [pos="0.400,0.175"]
+"metabolism of Tetradioxin" [exposure,pos="0.400,0.600"]
+CYP1A1 [pos="0.100,0.600"]
+Y [outcome,pos="0.800,0.600"]
+"metabolism of 2,4'-DDT" -&gt; Y
+"metabolism of Tetradioxin" -&gt; Y
+CYP1A1 -&gt; "metabolism of 2,4'-DDT"
+CYP1A1 -&gt; "metabolism of Tetradioxin"
+}
+
+
+</pre>
+<script type="text/javascript">
+  window.addEventListener("load", function() {
+    DAGitty.setup();
+  });
+</script>
+</div>
+<p>Nevertheless, I think such approaches can play a role in evidence synthesis of environmental chemicals: the sources of bias are generally different from the more common epidemiological studies and as such they could be used in triangulation. Put differently, the confounding effect of the metabolizing gene will likely be different than if we were to directly study the environmental exposure. Moreover, sometimes it just takes a while to find suitable instruments<sup>10</sup>. For example, it took years to find a likely valid instrument for circulating vitamin C levels (<span class="citation" data-cites="smith_mendelian_2010">Smith (2010)</span>). Although it’s important to note that functional polymorphisms may not exist in many cases (<span class="citation" data-cites="weiss_how_2000">Weiss and Terwilliger (2000)</span>).</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Box 3: Screening for associations with ‘environmentally sensitive genes’ in 2025
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>The paper from <span class="citation" data-cites="carol_ann_gross-davis_role_2015">Carol Ann Gross-Davis et al. (2015)</span> is from a decade ago and it seems that the Environmental Genome Project (EGP) resource they used to retrieve 647 known environmentally sensitive genes has been (spiritually) succeeded by projects like the <a href="https://ehp.niehs.nih.gov/doi/full/10.1289/ehp.1003348">Environmental Polymorphisms Registries (EPR)</a>, <a href="https://www.niehs.nih.gov/research/atniehs/labs/crb/studies/pegs">the Personalized Environment and Genes Studies (PEGS)</a>, and the <a href="https://ctdbase.org/">Comparative Toxicogenomics Database</a>. The latter seems like an especially useful resource to retrieve genes involved in metabolism of an environmental chemical. It can also provide insight into polymorphisms by its grouping of all chemicals that have been associated with a gene in past (mostly in vitro) studies.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="what-exposure-information-can-add" class="level1">
+<h1>What exposure information can add</h1>
+<p>So strictly speaking we do not even need measurement of exposures to do MR, but I think such measurements will nonetheless be useful in understanding the environmental response machinery as MR is most useful in evidence synthesis if the mechanism of association of the polymorphisms with the exposure (metabolism) is well-understood. Namely, biological knowledge is needed to know that the genes themselves do not cause disease, and if metabolism of other exposures is related to the gene or disease. Measurements of exposures can be useful in both cases: we can test for an association in the absence of exposure<sup>11</sup>, and we can of course use the exposure data to search for new candidate instruments, thereby generating useful biological information beyond the dominant in vitro studies used to select many environmentally sensitive candidate genes in the past.<sup>12</sup></p>
+<p>Past studies that incorporated chemical exposure have used classical job exposure matrices (JEMs) (e.g. <span class="citation" data-cites="quintero_santofimio_geneoccupational_2025">Quintero Santofimio et al. (2025)</span>) and existing studies could use high-throughput biomarkers. Of note here is the difference in measurement error structure between these exposure assessment methods: biomarkers typically have a classical error structure that dilutes effects towards the null and reduces statistical power, whereas JEMs – that assess exposure at the group level – mostly involve Berkson’s error, which does (in the general case) not bias estimates but instead reduces their precision. These differences could have implications for the design and merit of these studies for evidence synthesis.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Box 4: Not all biomarkers are the same: choosing the right biomarker
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>With biomarkers, it’s worth distinguishing what type is used. Here, I want to briefly distinguish between the utility of the parent compound, the Phase I metabolite, or the Phase II metabolite for MR studies.</p>
+<p>Using the parent compound in blood can provide a good proxy for the long-term, total-body burden of exposure. Measurement of a Phase I metabolite can be important as it sometimes is the more toxic, reactive form of the chemical, while measurement of a Phase II metabolite can help identify slow metabolizers as they would have lower levels of this final metabolite.</p>
+<p>However, as a proxy for genetic metabolic function these can all be noisy because they are influenced by external exposure levels which are, of course, independent of the gene’s function.</p>
+<p>Metabolic ratios (e.g.&nbsp;Phase II metabolite / Phase I metabolite) can help by normalizing for these differences in external exposure and as such can be more suitable for searching for genetic instruments. The <span class="citation" data-cites="pierce_arsenic_2013">Pierce et al. (2013)</span> study on arsenic is one example of this, where they calculate a ratio as a measure of an individual’s methylation capacity.</p>
+<p>I should note, though, that ratios in the presence of measurement error can bring some additional statistical challenges.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="conclusion" class="level1">
+<h1>Conclusion</h1>
+<p>Gene-environment interactions for chemicals seem to mostly get attention with respect to targeted prevention by identifying susceptible individuals. I think it would be worthwhile to also increase their use in qualitative testing because their sources of bias will be different from more common epidemiological study designs and as such they will be useful for the synthesis of evidence.<sup>13</sup> The MR framework then provides us with useful guidance to critically inspect these tests which is key with, for example, the challenging pleiotropy of environmental chemicals. Increased availability of exposure data can assist in the biological knowledge underpinnings of MR though measurement error will make this less trivial than we had perhaps hoped.</p>
+
+
+
+</section>
+
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0">
+<div id="ref-argos_screening_2018" class="csl-entry">
+Argos, Maria et al. 2018. <span>“Screening for Gene–Environment (<span>G</span>×<span>E</span>) Interaction Using Omics Data from Exposed Individuals: An Application to Gene-Arsenic Interaction.”</span> <em>Mammalian Genome</em> 29 (1): 101–11. doi:<a href="https://doi.org/10.1007/s00335-018-9737-8">10.1007/s00335-018-9737-8</a>.
+</div>
+<div id="ref-brennan_commentary_2004" class="csl-entry">
+Brennan, Paul. 2004. <span>“Commentary: <span>Mendelian</span> Randomization and Gene–Environment Interaction.”</span> <em>International Journal of Epidemiology</em> 33 (1): 17–21. doi:<a href="https://doi.org/10.1093/ije/dyh033">10.1093/ije/dyh033</a>.
+</div>
+<div id="ref-burstyn_virtues_2009" class="csl-entry">
+Burstyn, I. et al. 2009. <span>“The Virtues of a Deliberately Mis-Specified Disease Model in Demonstrating a Gene-Environment Interaction.”</span> <em>Occupational and Environmental Medicine</em> 66 (6): 374–80. doi:<a href="https://doi.org/10.1136/oem.2008.039081">10.1136/oem.2008.039081</a>.
+</div>
+<div id="ref-carol_ann_gross-davis_role_2015" class="csl-entry">
+Carol Ann Gross-Davis et al. 2015. <span>“The <span>Role</span> of <span>Genotypes</span> <span>That</span> <span>Modify</span> the <span>Toxicity</span> of <span>Chemical</span> <span>Mutagens</span> in the <span>Risk</span> for <span>Myeloproliferative</span> <span>Neoplasms</span>.”</span> <em>International Journal of Environmental Research and Public Health</em> 12 (3): 2465–85. doi:<a href="https://doi.org/10.3390/ijerph120302465">10.3390/ijerph120302465</a>.
+</div>
+<div id="ref-cherry_paraoxonase_2002" class="csl-entry">
+Cherry, Nicola et al. 2002. <span>“Paraoxonase (<span>PON1</span>) Polymorphisms in Farmers Attributing Ill Health to Sheep Dip.”</span> <em>Lancet (London, England)</em> 359 (9308): 763–64. doi:<a href="https://doi.org/10.1016/s0140-6736(02)07847-9">10.1016/s0140-6736(02)07847-9</a>.
+</div>
+<div id="ref-davey_smith_mendelian_2003" class="csl-entry">
+Davey Smith, George, and Shah Ebrahim. 2003. <span>“<span>‘<span>Mendelian</span> Randomization’</span>: Can Genetic Epidemiology Contribute to Understanding Environmental Determinants of Disease?*.”</span> <em>International Journal of Epidemiology</em> 32 (1): 1–22. doi:<a href="https://doi.org/10.1093/ije/dyg070">10.1093/ije/dyg070</a>.
+</div>
+<div id="ref-davies_within_2019" class="csl-entry">
+Davies, Neil M et al. 2019. <span>“Within Family <span>Mendelian</span> Randomization Studies.”</span> <em>Human Molecular Genetics</em> 28 (R2): R170–79. doi:<a href="https://doi.org/10.1093/hmg/ddz204">10.1093/hmg/ddz204</a>.
+</div>
+<div id="ref-dick_candidate_nodate" class="csl-entry">
+Dick, Danielle M et al. 2015. <span>“Candidate <span>Gene</span>–<span>Environment</span> <span>Interaction</span> <span>Research</span>: <span>Reflections</span> and <span>Recommendations</span>.”</span> doi:<a href="https://doi.org/10.1177/1745691614556682">10.1177/1745691614556682</a>.
+</div>
+<div id="ref-garcia-closas_nat2_nodate" class="csl-entry">
+García-Closas, Montserrat et al. 2005. <span>“<span>NAT2</span> Slow Acetylation, <span>GSTM1</span> Null Genotype, and Risk of Bladder Cancer: Results from the <span>Spanish</span> <span>Bladder</span> <span>Cancer</span> <span>Study</span> and Meta-Analyses.”</span> doi:<a href="https://doi.org/10.1016/S0140-6736(05)67137-1.">10.1016/S0140-6736(05)67137-1.</a>
+</div>
+<div id="ref-hutter_gene-environment_nodate" class="csl-entry">
+Hutter, Carolyn M et al. 2013. <span>“Gene-<span>Environment</span> <span>Interactions</span> in <span>Cancer</span> <span>Epidemiology</span>: <span>A</span> <span>National</span> <span>Cancer</span> <span>Institute</span> <span>Think</span> <span>Tank</span> <span>Report</span>.”</span> doi:<a href="https://doi.org/10.1002/gepi.21756">10.1002/gepi.21756</a>.
+</div>
+<div id="ref-katan_apolipoprotein_1986" class="csl-entry">
+Katan, M. B. 1986. <span>“Apolipoprotein <span>E</span> Isoforms, Serum Cholesterol, and Cancer.”</span> <em>Lancet (London, England)</em> 1 (8479): 507–8. doi:<a href="https://doi.org/10.1016/s0140-6736(86)92972-7">10.1016/s0140-6736(86)92972-7</a>.
+</div>
+<div id="ref-kodali_effects_2018" class="csl-entry">
+Kodali, Hanish P, Brian T Pavilonis, and C Mary Schooling. 2018. <span>“Effects of Copper and Zinc on Ischemic Heart Disease and Myocardial Infarction: A <span>Mendelian</span> Randomization Study.”</span> <em>The American Journal of Clinical Nutrition</em> 108 (2): 237–42. doi:<a href="https://doi.org/10.1093/ajcn/nqy129">10.1093/ajcn/nqy129</a>.
+</div>
+<div id="ref-lee_interactions_2022" class="csl-entry">
+Lee, Derrick G. et al. 2022. <span>“Interactions Between Exposure to Polycyclic Aromatic Hydrocarbons and Xenobiotic Metabolism Genes, and Risk of Breast Cancer.”</span> <em>Breast Cancer</em> 29 (1): 38–49. doi:<a href="https://doi.org/10.1007/s12282-021-01279-0">10.1007/s12282-021-01279-0</a>.
+</div>
+<div id="ref-luo_investigations_2013" class="csl-entry">
+Luo, Hao, Igor Burstyn, and Paul Gustafson. 2013. <span>“Investigations of <span>Gene</span>–<span>Disease</span> <span>Associations</span>: <span>Costs</span> and <span>Benefits</span> of <span>Environmental</span> <span>Data</span>.”</span> <em>Epidemiology</em> 24 (4): 562–68. doi:<a href="https://doi.org/10.1097/EDE.0b013e3182944dd5">10.1097/EDE.0b013e3182944dd5</a>.
+</div>
+<div id="ref-motsinger-reif_gene-environment_2024" class="csl-entry">
+Motsinger-Reif, Alison A. et al. 2024. <span>“Gene-Environment Interactions Within a Precision Environmental Health Framework.”</span> <em>Cell Genomics</em> 4 (7): 100591. doi:<a href="https://doi.org/10.1016/j.xgen.2024.100591">10.1016/j.xgen.2024.100591</a>.
+</div>
+<div id="ref-pierce_arsenic_2013" class="csl-entry">
+Pierce, Brandon L et al. 2013. <span>“Arsenic Metabolism Efficiency Has a Causal Role in Arsenic Toxicity: <span>Mendelian</span> Randomization and Gene-Environment Interaction.”</span> <em>International Journal of Epidemiology</em> 42 (6): 1862–72. doi:<a href="https://doi.org/10.1093/ije/dyt182">10.1093/ije/dyt182</a>.
+</div>
+<div id="ref-quintero_santofimio_geneoccupational_2025" class="csl-entry">
+Quintero Santofimio, Valentina et al. 2025. <span>“Gene–Occupational Exposure Interactions in Small Airways Obstruction in the <span>UK</span> <span>Biobank</span>: A Cross-Sectional Study.”</span> <em>Occupational and Environmental Medicine</em>, October, oemed-2025-110112. doi:<a href="https://doi.org/10.1136/oemed-2025-110112">10.1136/oemed-2025-110112</a>.
+</div>
+<div id="ref-richmond_mendelian_2022" class="csl-entry">
+Richmond, Rebecca C., and George Davey Smith. 2022. <span>“Mendelian <span>Randomization</span>: <span>Concepts</span> and <span>Scope</span>.”</span> <em>Cold Spring Harbor Perspectives in Medicine</em> 12 (1): a040501. doi:<a href="https://doi.org/10.1101/cshperspect.a040501">10.1101/cshperspect.a040501</a>.
+</div>
+<div id="ref-ritz_lessons_2017" class="csl-entry">
+Ritz, Beate R. et al. 2017. <span>“Lessons <span>Learned</span> <span>From</span> <span>Past</span> <span>Gene</span>-<span>Environment</span> <span>Interaction</span> <span>Successes</span>.”</span> <em>American Journal of Epidemiology</em> 186 (7): 778–86. doi:<a href="https://doi.org/10.1093/aje/kwx230">10.1093/aje/kwx230</a>.
+</div>
+<div id="ref-sanderson_mendelian_2022" class="csl-entry">
+Sanderson, Eleanor et al. 2022. <span>“Mendelian Randomization.”</span> <em>Nature Reviews Methods Primers</em> 2 (1): 1–21. doi:<a href="https://doi.org/10.1038/s43586-021-00092-5">10.1038/s43586-021-00092-5</a>.
+</div>
+<div id="ref-schulte_considerations_2015" class="csl-entry">
+Schulte, P. A., C. Whittaker, and C. P. Curran. 2015. <span>“Considerations for <span>Using</span> <span>Genetic</span> and <span>Epigenetic</span> <span>Information</span> in <span>Occupational</span> <span>Health</span> <span>Risk</span> <span>Assessment</span> and <span>Standard</span> <span>Setting</span>.”</span> <em>Journal of Occupational and Environmental Hygiene</em> 12 (sup1): S69–81. doi:<a href="https://doi.org/10.1080/15459624.2015.1060323">10.1080/15459624.2015.1060323</a>.
+</div>
+<div id="ref-smith_clustered_2007" class="csl-entry">
+Smith, George Davey et al. 2007. <span>“Clustered <span>Environments</span> and <span>Randomized</span> <span>Genes</span>: <span>A</span> <span>Fundamental</span> <span>Distinction</span> Between <span>Conventional</span> and <span>Genetic</span> <span>Epidemiology</span>.”</span> <em>PLOS Medicine</em> 4 (12): e352. doi:<a href="https://doi.org/10.1371/journal.pmed.0040352">10.1371/journal.pmed.0040352</a>.
+</div>
+<div id="ref-smith_mendelian_2010" class="csl-entry">
+Smith, George Davey. 2010. <span>“Mendelian <span>Randomization</span> for <span>Strengthening</span> <span>Causal</span> <span>Inference</span> in <span>Observational</span> <span>Studies</span>: <span>Application</span> to <span>Gene</span> × <span>Environment</span> <span>Interactions</span>.”</span> <em>Perspectives on Psychological Science</em> 5 (5): 527–45. doi:<a href="https://doi.org/10.1177/1745691610383505">10.1177/1745691610383505</a>.
+</div>
+<div id="ref-swerdlow_selecting_2016" class="csl-entry">
+Swerdlow, Daniel I et al. 2016. <span>“Selecting Instruments for <span>Mendelian</span> Randomization in the Wake of Genome-Wide Association Studies.”</span> <em>International Journal of Epidemiology</em> 45 (5): 1600–1616. doi:<a href="https://doi.org/10.1093/ije/dyw088">10.1093/ije/dyw088</a>.
+</div>
+<div id="ref-tudball_almost_2023" class="csl-entry">
+Tudball, Matthew J., George Davey Smith, and Qingyuan Zhao. 2023. <span>“Almost Exact <span>Mendelian</span> Randomization.”</span> arXiv. doi:<a href="https://doi.org/10.48550/arXiv.2208.14035">10.48550/arXiv.2208.14035</a>.
+</div>
+<div id="ref-vanderweele_methodological_2014" class="csl-entry">
+VanderWeele, Tyler J. et al. 2014. <span>“Methodological <span>Challenges</span> in <span>Mendelian</span> <span>Randomization</span>:”</span> <em>Epidemiology</em> 25 (3): 427–35. doi:<a href="https://doi.org/10.1097/EDE.0000000000000081">10.1097/EDE.0000000000000081</a>.
+</div>
+<div id="ref-weiss_how_2000" class="csl-entry">
+Weiss, K. M., and J. D. Terwilliger. 2000. <span>“How Many Diseases Does It Take to Map a Gene with <span>SNPs</span>?”</span> <em>Nature Genetics</em> 26 (2): 151–57. doi:<a href="https://doi.org/10.1038/79866">10.1038/79866</a>.
+</div>
+<div id="ref-weisskopf_trade-offs_2017" class="csl-entry">
+Weisskopf, Marc G., and Thomas F. Webster. 2017. <span>“Trade-Offs of <span>Personal</span> <span>Versus</span> <span>More</span> <span>Proxy</span> <span>Exposure</span> <span>Measures</span> in <span>Environmental</span> <span>Epidemiology</span>.”</span> <em>Epidemiology</em> 28 (5): 635. doi:<a href="https://doi.org/10.1097/EDE.0000000000000686">10.1097/EDE.0000000000000686</a>.
+</div>
+<div id="ref-westerman_many_2024" class="csl-entry">
+Westerman, Kenneth E., and Tamar Sofer. 2024. <span>“Many Roads to a Gene-Environment Interaction.”</span> <em>The American Journal of Human Genetics</em> 111 (4): 626–35. doi:<a href="https://doi.org/10.1016/j.ajhg.2024.03.002">10.1016/j.ajhg.2024.03.002</a>.
+</div>
+</div></section><section id="footnotes" class="footnotes footnotes-end-of-document"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1"><p>In non-familial studies (which are dominant in the literature due to data limitations) this is better described as ‘approximate MR’ (<span class="citation" data-cites="davey_smith_mendelian_2003">Davey Smith and Ebrahim (2003)</span>). And the (implicit) verdict seems to be that this is good enough, although it is at risk of potential biases from dynastic effects, population structure, and assortative mating (<span class="citation" data-cites="davies_within_2019">Davies et al. (2019)</span>, <span class="citation" data-cites="tudball_almost_2023">Tudball, Smith, and Zhao (2023)</span>, <span class="citation" data-cites="smith_clustered_2007">Smith et al. (2007)</span>).↩︎</p></li>
+<li id="fn2"><p>This showed a null association and in general, MR has been most useful to show null effects whereas classical observational studies showed consistent (confounded) effect sizes.↩︎</p></li>
+<li id="fn3"><p>Another instance of a violation of gene-environment equivalence is canalization where the body develops compensatory pathways to mitigate the effects of genetic or environmental variations during development. For example, an individual with a genetic predisposition to high levels of a particular substance from birth might develop resistance to its effects, which would not be the case for someone whose levels of that substance increase later in life due to environmental factors. Whether canalization occurs widely is unknown (<span class="citation" data-cites="kodali_effects_2018">Kodali, Pavilonis, and Schooling (2018)</span>).↩︎</p></li>
+<li id="fn4"><p>GD Smith referred to many studies that carry out MR for GWAS hits for such exposures without gene-environment equivalency as ’<a href="https://www.youtube.com/watch?v=jQmlba_B_lg">noodles’</a> : they will find genetic correlates of noodle eating but this does not instrument a specific taste for noodles that causes them to eat more noodles. You’re just looking at upstream factors instead. (Related GD Smith presentation in better quality available <a href="https://www.youtube.com/watch?v=NTZ0imjoH2w">here</a>)↩︎</p></li>
+<li id="fn5"><p>These tests can be seen as an analogue to intent-to-treat analysis in RCTs.↩︎</p></li>
+<li id="fn6"><p>As <span class="citation" data-cites="vanderweele_methodological_2014">VanderWeele et al. (2014)</span> notes, gene-environment interactions depend on the definition of exposure. For example, the genes used to study bladder cancer cause you to extract more toxins per cigarette and as such amplify the effect of each cigarette smoked. If we define the exposure as pack-years there is a gene-environment interaction. However, if we define the exposure as all aspects of smoking behavior including the metabolism of toxins there is not a gene-environment interaction. Note also how the paper on arsenic talks about arsenic metabolism instead of arsenic.↩︎</p></li>
+<li id="fn7"><p>Other terms I encountered in the literature that describe the same or closely related phenomena (or which are useful terms for finding related literature): environmental response machinery, environmental response/sensitive genes, reduced detoxification, slow-metabolizer variants, poor/extensive metabolizer, toxicogenetics, precision environmental medicine.↩︎</p></li>
+<li id="fn8"><p><span class="citation" data-cites="vanderweele_methodological_2014">VanderWeele et al. (2014)</span> also mention that an additional advantage of testing (instead of estimating) is that you do not need to fully specify what the exposure exactly is; the IV assumptions just need to hold under some definition of the exposure.↩︎</p></li>
+<li id="fn9"><p>In IV terms this is the exclusion restriction.↩︎</p></li>
+<li id="fn10"><p>Not discussed in detail in this post, but suitable instruments also implies that they are strong enough. Instruments that are only weakly associated with the exposure are known as “weak instruments” and can suffer from low power and introduce significant bias. This bias pulls the estimate toward the confounded observational association in one-sample MR and toward the null in two-sample MR. See e.g. <span class="citation" data-cites="sanderson_mendelian_2022">Sanderson et al. (2022)</span> and <span class="citation" data-cites="richmond_mendelian_2022">Richmond and Smith (2022)</span> for more information.↩︎</p></li>
+<li id="fn11"><p>Absence of exposure can be very difficult with ubiquitous exposures such as PFAS though.↩︎</p></li>
+<li id="fn12"><p>Directly modeling the gene-environment interaction seems attractive when you have both exposure, disease, and gene data available. But <span class="citation" data-cites="burstyn_virtues_2009">Burstyn et al. (2009)</span> note that deliberately mis-specifying your gene-environment interaction model by using a “gene-only” model can be beneficial if we can assume the gene only affects disease risk in exposed subjects and exposure measurements are assessed with error.↩︎</p></li>
+<li id="fn13"><p>If I had to counter my own position I would say that the need for this is limited because in the study of chemical exposures, by environmental and occupational epidemiology, confounding (i.e.&nbsp;what MR overcomes) is much less of a problem than in other parts of epidemiology. Namely, we often assess exposures at the group-level and the relationship of these group-level measurements to individual confounders is often very limited (see <span class="citation" data-cites="weisskopf_trade-offs_2017">Weisskopf and Webster (2017)</span> for example). The great challenge is instead assessing exposure. <span class="citation" data-cites="weisskopf_trade-offs_2017">Weisskopf and Webster (2017)</span> also describe a very cool general (non-genetic) instrumental variable in environmental epidemiology as the group-level exposure assessments can be seen as an instrumental variable for personal-level exposure measurements.↩︎</p></li>
+</ol>
+</section><section class="quarto-appendix-contents" id="quarto-citation"><h2 class="anchored quarto-appendix-heading">Citation</h2><div><div class="quarto-appendix-secondary-label">BibTeX citation:</div><pre class="sourceCode code-with-copy quarto-appendix-bibtex"><code class="sourceCode bibtex">@online{oosterwegel2025,
+  author = {Oosterwegel, Max J.},
+  title = {Can We Use Mendelian Randomization to Learn about the Causal
+    Effects of Chemical Exposures on Our Health?},
+  date = {2025-10-31},
+  url = {https://maxoosterwegel.com/blog/mr-chemical-agents/},
+  doi = {placeholder},
+  langid = {en}
+}
+</code></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-oosterwegel2025" class="csl-entry quarto-appendix-citeas">
+Oosterwegel, Max J. 2025. <span>“Can We Use Mendelian Randomization to
+Learn about the Causal Effects of Chemical Exposures on Our
+Health?”</span> October 31. doi:<a href="https://doi.org/placeholder">placeholder</a>.
+</div></div></section></div> ]]></description>
+  <guid>https://maxoosterwegel.com/blog/mr-chemical-agents/</guid>
+  <pubDate>Thu, 30 Oct 2025 23:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Exploring within-person biomarker variability interactively</title>
   <dc:creator>Max J. Oosterwegel</dc:creator>
@@ -10308,22 +10602,22 @@ font-style: inherit;">theme_minimal</span>()</span></code></pre></div>
 
 <div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0">
 <div id="ref-lyles2017estimating" class="csl-entry">
-Lyles, Robert H. 2017. <span>“Estimating Partial Correlations Between Logged HIV RNA Measurements Subject to Detection Limits.”</span> In <em>Quantitative Methods for HIV/AIDS Research</em>, 109–34. Chapman; Hall/CRC. <a href="https://doi.org/10.1201/9781315120805">https://doi.org/10.1201/9781315120805</a>.
+Lyles, Robert H. 2017. <span>“Estimating Partial Correlations Between Logged HIV RNA Measurements Subject to Detection Limits.”</span> In <em>Quantitative Methods for HIV/AIDS Research</em>, 109–34. Chapman; Hall/CRC. doi:<a href="https://doi.org/10.1201/9781315120805">10.1201/9781315120805</a>.
 </div>
 <div id="ref-nie_marginal_2009" class="csl-entry">
-Nie, L., H. Chu, Y. Cheng, C. Spurney, K. Nagaraju, and J. Chen. 2009. <span>“Marginal and <span>Conditional</span> <span>Approaches</span> to <span>Multivariate</span> <span>Variables</span> <span>Subject</span> to <span>Limit</span> of <span>Detection</span>.”</span> <em>Journal of Biopharmaceutical Statistics</em> 19 (6): 1151–61. <a href="https://doi.org/10.1080/10543400903243033">https://doi.org/10.1080/10543400903243033</a>.
+Nie, L. et al. 2009. <span>“Marginal and <span>Conditional</span> <span>Approaches</span> to <span>Multivariate</span> <span>Variables</span> <span>Subject</span> to <span>Limit</span> of <span>Detection</span>.”</span> <em>Journal of Biopharmaceutical Statistics</em> 19 (6): 1151–61. doi:<a href="https://doi.org/10.1080/10543400903243033">10.1080/10543400903243033</a>.
 </div>
 <div id="ref-nie_bias_2008" class="csl-entry">
-Nie, Lei, Haitao Chu, and Valeriy R. Korostyshevskiy. 2008. <span>“Bias Reduction for Nonparametric Correlation Coefficients Under the Bivariate Normal Copula Assumption with Known Detection Limits.”</span> <em>Canadian Journal of Statistics</em> 36 (3): 427–42. <a href="https://doi.org/10.1002/cjs.5550360307">https://doi.org/10.1002/cjs.5550360307</a>.
+Nie, Lei, Haitao Chu, and Valeriy R. Korostyshevskiy. 2008. <span>“Bias Reduction for Nonparametric Correlation Coefficients Under the Bivariate Normal Copula Assumption with Known Detection Limits.”</span> <em>Canadian Journal of Statistics</em> 36 (3): 427–42. doi:<a href="https://doi.org/10.1002/cjs.5550360307">10.1002/cjs.5550360307</a>.
 </div>
 <div id="ref-romdhani_association_2011" class="csl-entry">
-Romdhani, Héla, and Lajmi Lakhal-Chaieb. 2011. <span>“On the Association Between Variables with Lower Detection Limits.”</span> <em>Statistics in Medicine</em> 30 (26): 3137–48. <a href="https://doi.org/10.1002/sim.4319">https://doi.org/10.1002/sim.4319</a>.
+Romdhani, Héla, and Lajmi Lakhal-Chaieb. 2011. <span>“On the Association Between Variables with Lower Detection Limits.”</span> <em>Statistics in Medicine</em> 30 (26): 3137–48. doi:<a href="https://doi.org/10.1002/sim.4319">10.1002/sim.4319</a>.
 </div>
 <div id="ref-sun__aut_copulacenr_2024" class="csl-entry">
-Sun, Tao, and Ying Ding. 2024. <span>“<span>CopulaCenR</span>: <span>Copula</span>-<span>Based</span> <span>Regression</span> <span>Models</span> for <span>Multivariate</span> <span>Censored</span> <span>Data</span>.”</span> <a href="https://doi.org/10.32614/CRAN.package.CopulaCenR">https://doi.org/10.32614/CRAN.package.CopulaCenR</a>.
+Sun, Tao, and Ying Ding. 2024. <span>“<span>CopulaCenR</span>: <span>Copula</span>-<span>Based</span> <span>Regression</span> <span>Models</span> for <span>Multivariate</span> <span>Censored</span> <span>Data</span>.”</span> doi:<a href="https://doi.org/10.32614/CRAN.package.CopulaCenR">10.32614/CRAN.package.CopulaCenR</a>.
 </div>
 <div id="ref-tran_measuring_2021" class="csl-entry">
-Tran, Thao M. P., Steven Abrams, Marc Aerts, Kirsten Maertens, and Niel Hens. 2021. <span>“Measuring Association Among Censored Antibody Titer Data.”</span> <em>Statistics in Medicine</em> 40 (16): 3740–61. <a href="https://doi.org/10.1002/sim.8995">https://doi.org/10.1002/sim.8995</a>.
+Tran, Thao M. P. et al. 2021. <span>“Measuring Association Among Censored Antibody Titer Data.”</span> <em>Statistics in Medicine</em> 40 (16): 3740–61. doi:<a href="https://doi.org/10.1002/sim.8995">10.1002/sim.8995</a>.
 </div>
 </div></section><section id="footnotes" class="footnotes footnotes-end-of-document"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
 
@@ -10343,7 +10637,7 @@ Tran, Thao M. P., Steven Abrams, Marc Aerts, Kirsten Maertens, and Niel Hens. 20
 }
 </code></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-oosterwegel2025" class="csl-entry quarto-appendix-citeas">
 Oosterwegel, Max J. 2025. <span>“Fitting Models to Bivariate
-Left-Censored Data.”</span> July 30, 2025. <a href="https://doi.org/placeholder">https://doi.org/placeholder</a>.
+Left-Censored Data.”</span> July 30. doi:<a href="https://doi.org/placeholder">placeholder</a>.
 </div></div></section></div> ]]></description>
   <guid>https://maxoosterwegel.com/blog/bivariate-censoring/</guid>
   <pubDate>Tue, 29 Jul 2025 22:00:00 GMT</pubDate>
@@ -16637,16 +16931,16 @@ font-style: inherit;">;</span></span>
 
 <div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0">
 <div id="ref-goeman_multiple_2014" class="csl-entry">
-Goeman, Jelle J., and Aldo Solari. 2014. <span>“Multiple Hypothesis Testing in Genomics.”</span> <em>Statistics in Medicine</em> 33 (11): 1946–78. <a href="https://doi.org/10.1002/sim.6082">https://doi.org/10.1002/sim.6082</a>.
+Goeman, Jelle J., and Aldo Solari. 2014. <span>“Multiple Hypothesis Testing in Genomics.”</span> <em>Statistics in Medicine</em> 33 (11): 1946–78. doi:<a href="https://doi.org/10.1002/sim.6082">10.1002/sim.6082</a>.
 </div>
 <div id="ref-huber_reporting_2019" class="csl-entry">
-Huber, Wolfgang. 2019. <span>“Reporting p <span>Values</span>.”</span> <em>Cell Systems</em> 8 (3): 170–71. <a href="https://doi.org/10.1016/j.cels.2019.03.001">https://doi.org/10.1016/j.cels.2019.03.001</a>.
+Huber, Wolfgang. 2019. <span>“Reporting p <span>Values</span>.”</span> <em>Cell Systems</em> 8 (3): 170–71. doi:<a href="https://doi.org/10.1016/j.cels.2019.03.001">10.1016/j.cels.2019.03.001</a>.
 </div>
 <div id="ref-ignatiadis_covariate_2021" class="csl-entry">
-Ignatiadis, Nikolaos, and Wolfgang Huber. 2021. <span>“Covariate <span>Powered</span> <span>Cross</span>-<span>Weighted</span> <span>Multiple</span> <span>Testing</span>.”</span> <em>Journal of the Royal Statistical Society Series B: Statistical Methodology</em> 83 (4): 720–51. <a href="https://doi.org/10.1111/rssb.12411">https://doi.org/10.1111/rssb.12411</a>.
+Ignatiadis, Nikolaos, and Wolfgang Huber. 2021. <span>“Covariate <span>Powered</span> <span>Cross</span>-<span>Weighted</span> <span>Multiple</span> <span>Testing</span>.”</span> <em>Journal of the Royal Statistical Society Series B: Statistical Methodology</em> 83 (4): 720–51. doi:<a href="https://doi.org/10.1111/rssb.12411">10.1111/rssb.12411</a>.
 </div>
 <div id="ref-sun_stratified_2006" class="csl-entry">
-Sun, Lei, Radu V. Craiu, Andrew D. Paterson, and Shelley B. Bull. 2006. <span>“Stratified False Discovery Control for Large-Scale Hypothesis Testing with Application to Genome-Wide Association Studies.”</span> <em>Genetic Epidemiology</em> 30 (6): 519–30. <a href="https://doi.org/10.1002/gepi.20164">https://doi.org/10.1002/gepi.20164</a>.
+Sun, Lei et al. 2006. <span>“Stratified False Discovery Control for Large-Scale Hypothesis Testing with Application to Genome-Wide Association Studies.”</span> <em>Genetic Epidemiology</em> 30 (6): 519–30. doi:<a href="https://doi.org/10.1002/gepi.20164">10.1002/gepi.20164</a>.
 </div>
 </div></section><section id="footnotes" class="footnotes footnotes-end-of-document"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
 
@@ -16667,8 +16961,8 @@ Sun, Lei, Radu V. Craiu, Andrew D. Paterson, and Shelley B. Bull. 2006. <span>�
 }
 </code></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-oosterwegel2025" class="csl-entry quarto-appendix-citeas">
 Oosterwegel, Max J. 2025. <span>“No, Simply Reducing the Number of Tests
-Won’t Increase Your Power When You Control the FDR.”</span> July 18,
-2025. <a href="https://doi.org/placeholder">https://doi.org/placeholder</a>.
+Won’t Increase Your Power When You Control the FDR.”</span> July 18.
+doi:<a href="https://doi.org/placeholder">placeholder</a>.
 </div></div></section></div> ]]></description>
   <guid>https://maxoosterwegel.com/blog/fdr-heuristics/</guid>
   <pubDate>Thu, 17 Jul 2025 22:00:00 GMT</pubDate>
@@ -17153,16 +17447,16 @@ font-style: inherit;">'log_x_adj'</span>)</span></code></pre></div>
 Breslow, Norman E, and Nicholas E Day. 1980. <em>Statistical Methods in Cancer Research Volume i: The Analysis of Case-Control Studies</em>. International Agency for Research on Cancer Scientific Publications. Lyon, France: International Agency for Research on Cancer.
 </div>
 <div id="ref-hosmer2013" class="csl-entry">
-Hosmer, David W, Stanley Lemeshow, and Rodney X Sturdivant. 2013. <em>Applied Logistic Regression</em>. 3rd ed. Wiley Series in Probability and Statistics. Wiley-Blackwell.
+Hosmer, David W, Stanley Lemeshow, and Rodney X Sturdivant. 2013. <em>Applied Logistic Regression</em>. 3rd ed. Wiley Series in Probability and Statistics. Wiley-Blackwell. doi:<a href="https://doi.org/10.1002/9781118548387">10.1002/9781118548387</a>.
 </div>
 <div id="ref-lin_proper_2009" class="csl-entry">
-Lin, D. Y., and D. Zeng. 2009. <span>“Proper Analysis of Secondary Phenotype Data in Case-Control Association Studies.”</span> <em>Genetic Epidemiology</em> 33 (3): 256–65. <a href="https://doi.org/10.1002/gepi.20377">https://doi.org/10.1002/gepi.20377</a>.
+Lin, D. Y., and D. Zeng. 2009. <span>“Proper Analysis of Secondary Phenotype Data in Case-Control Association Studies.”</span> <em>Genetic Epidemiology</em> 33 (3): 256–65. doi:<a href="https://doi.org/10.1002/gepi.20377">10.1002/gepi.20377</a>.
 </div>
 <div id="ref-obrien_case_2022" class="csl-entry">
-O’Brien, Katie M., Kaitlyn G. Lawrence, and Alexander P. Keil. 2022. <span>“The Case for Case-Cohort: <span>An</span> Applied Epidemiologist’s Guide to Re-Framing Case-Cohort Studies to Improve Usability and Flexibility.”</span> <em>Epidemiology (Cambridge, Mass.)</em> 33 (3): 354–61. <a href="https://doi.org/10.1097/EDE.0000000000001469">https://doi.org/10.1097/EDE.0000000000001469</a>.
+O’Brien, Katie M., Kaitlyn G. Lawrence, and Alexander P. Keil. 2022. <span>“The Case for Case-Cohort: <span>An</span> Applied Epidemiologist’s Guide to Re-Framing Case-Cohort Studies to Improve Usability and Flexibility.”</span> <em>Epidemiology (Cambridge, Mass.)</em> 33 (3): 354–61. doi:<a href="https://doi.org/10.1097/EDE.0000000000001469">10.1097/EDE.0000000000001469</a>.
 </div>
 <div id="ref-pearce2016" class="csl-entry">
-Pearce, Neil. 2016. <span>“Analysis of Matched Case-Control Studies.”</span> <em>BMJ</em>, February, i969. <a href="https://doi.org/10.1136/bmj.i969">https://doi.org/10.1136/bmj.i969</a>.
+Pearce, Neil. 2016. <span>“Analysis of Matched Case-Control Studies.”</span> <em>BMJ</em>, February, i969. doi:<a href="https://doi.org/10.1136/bmj.i969">10.1136/bmj.i969</a>.
 </div>
 </div></section><section id="footnotes" class="footnotes footnotes-end-of-document"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
 
@@ -17183,7 +17477,7 @@ Pearce, Neil. 2016. <span>“Analysis of Matched Case-Control Studies.”</span>
 </code></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-oosterwegel2025" class="csl-entry quarto-appendix-citeas">
 Oosterwegel, Max J. 2025. <span>“The Advantages of Conditional Logistic
 Regression in Matched Case-Control Studies of (Metabol)omic
-Data.”</span> May 5, 2025. <a href="https://doi.org/placeholder">https://doi.org/placeholder</a>.
+Data.”</span> May 5. doi:<a href="https://doi.org/placeholder">placeholder</a>.
 </div></div></section></div> ]]></description>
   <guid>https://maxoosterwegel.com/blog/conditional-logistic-regression-omics/</guid>
   <pubDate>Sun, 04 May 2025 22:00:00 GMT</pubDate>
@@ -19018,13 +19312,13 @@ font-style: inherit;">element_blank</span>())</span></code></pre></div>
 
 <div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0">
 <div id="ref-lazar_2016" class="csl-entry">
-Lazar, Cosmin, Laurent Gatto, Myriam Ferro, Christophe Bruley, and Thomas Burger. 2016. <span>“Accounting for the <span>Multiple</span> <span>Natures</span> of <span>Missing</span> <span>Values</span> in <span>Label</span>-<span>Free</span> <span>Quantitative</span> <span>Proteomics</span> <span>Data</span> <span>Sets</span> to <span>Compare</span> <span>Imputation</span> <span>Strategies</span>.”</span> <em>Journal of Proteome Research</em> 15 (4): 1116–25. <a href="https://doi.org/10.1021/acs.jproteome.5b00981">https://doi.org/10.1021/acs.jproteome.5b00981</a>.
+Lazar, Cosmin et al. 2016. <span>“Accounting for the <span>Multiple</span> <span>Natures</span> of <span>Missing</span> <span>Values</span> in <span>Label</span>-<span>Free</span> <span>Quantitative</span> <span>Proteomics</span> <span>Data</span> <span>Sets</span> to <span>Compare</span> <span>Imputation</span> <span>Strategies</span>.”</span> <em>Journal of Proteome Research</em> 15 (4): 1116–25. doi:<a href="https://doi.org/10.1021/acs.jproteome.5b00981">10.1021/acs.jproteome.5b00981</a>.
 </div>
 <div id="ref-lubin_2004" class="csl-entry">
-Lubin, Jay H., Joanne S. Colt, David Camann, Scott Davis, James R. Cerhan, Richard K. Severson, Leslie Bernstein, and Patricia Hartge. 2004. <span>“Epidemiologic <span>Evaluation</span> of <span>Measurement</span> <span>Data</span> in the <span>Presence</span> of <span>Detection</span> <span>Limits</span>.”</span> <em>Environmental Health Perspectives</em> 112 (17): 1691–96. <a href="https://doi.org/10.1289/ehp.7199">https://doi.org/10.1289/ehp.7199</a>.
+Lubin, Jay H. et al. 2004. <span>“Epidemiologic <span>Evaluation</span> of <span>Measurement</span> <span>Data</span> in the <span>Presence</span> of <span>Detection</span> <span>Limits</span>.”</span> <em>Environmental Health Perspectives</em> 112 (17): 1691–96. doi:<a href="https://doi.org/10.1289/ehp.7199">10.1289/ehp.7199</a>.
 </div>
 <div id="ref-senn2012ghosts" class="csl-entry">
-Senn, Stephen, Nick Holford, and Hans Hockey. 2012. <span>“The Ghosts of Departed Quantities: Approaches to Dealing with Observations Below the Limit of Quantitation.”</span> <em>Statistics in Medicine</em> 31 (30): 4280–95. <a href="https://doi.org/10.1002/sim.5515">https://doi.org/10.1002/sim.5515</a>.
+Senn, Stephen, Nick Holford, and Hans Hockey. 2012. <span>“The Ghosts of Departed Quantities: Approaches to Dealing with Observations Below the Limit of Quantitation.”</span> <em>Statistics in Medicine</em> 31 (30). Wiley Online Library: 4280–95. doi:<a href="https://doi.org/10.1002/sim.5515">10.1002/sim.5515</a>.
 </div>
 </div></section><section id="footnotes" class="footnotes footnotes-end-of-document"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
 
@@ -19048,8 +19342,8 @@ Senn, Stephen, Nick Holford, and Hans Hockey. 2012. <span>“The Ghosts of Depar
 }
 </code></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-oosterwegel2025" class="csl-entry quarto-appendix-citeas">
 Oosterwegel, Max J. 2025. <span>“Imputing Nondetects and Removing
-Technical Variation in Left-Censored Metabolomic Data.”</span> April 28,
-2025. <a href="https://doi.org/placeholder">https://doi.org/placeholder</a>.
+Technical Variation in Left-Censored Metabolomic Data.”</span> April 28.
+doi:<a href="https://doi.org/placeholder">placeholder</a>.
 </div></div></section></div> ]]></description>
   <guid>https://maxoosterwegel.com/blog/impute-and-remove-technical-variation-metabolomics/</guid>
   <pubDate>Sun, 27 Apr 2025 22:00:00 GMT</pubDate>
@@ -21110,7 +21404,7 @@ font-style: inherit;">TRUE</span>))</span></code></pre></div>
 Gelman, A., and J. Hill. 2006. <em>Data Analysis Using Regression and Multilevel/Hierarchical Models</em>. Analytical Methods for Social Research. Cambridge University Press. <a href="https://sites.stat.columbia.edu/gelman/arm/">https://sites.stat.columbia.edu/gelman/arm/</a>.
 </div>
 <div id="ref-gelman2013bayesian" class="csl-entry">
-Gelman, Andrew, John B. Carlin, Hal S. Stern, David B. Dunson, Akti Vehtari, and Donald B. Rubin. 2013. <em>Bayesian Data Analysis</em>. Third. Chapman &amp; Hall/CRC Texts in Statistical Science Series. CRC. <a href="https://stat.columbia.edu/~gelman/book/">https://stat.columbia.edu/~gelman/book/</a>.
+Gelman, Andrew et al. 2013. <em>Bayesian Data Analysis</em>. Third. Chapman &amp; Hall/CRC Texts in Statistical Science Series. CRC. <a href="https://stat.columbia.edu/~gelman/book/">https://stat.columbia.edu/~gelman/book/</a>.
 </div>
 <div id="ref-gelman2021regression" class="csl-entry">
 Gelman, Andrew, Jennifer Hill, and Aki Vehtari. 2021. <em>Regression and Other Stories</em>. Cambridge University Press. <a href="https://avehtari.github.io/ROS-Examples/">https://avehtari.github.io/ROS-Examples/</a>.
@@ -21119,10 +21413,10 @@ Gelman, Andrew, Jennifer Hill, and Aki Vehtari. 2021. <em>Regression and Other S
 Helsel, D. R. 2005. <em>Nondetects and Data Analysis: Statistics for Censored Environmental Data</em>. Statistics in Practice. Wiley. <a href="https://books.google.nl/books?id=krwQAQAAIAAJ">https://books.google.nl/books?id=krwQAQAAIAAJ</a>.
 </div>
 <div id="ref-helsel_fabricating_2006" class="csl-entry">
-Helsel, Dennis R. 2006. <span>“Fabricating Data: How Substituting Values for Nondetects Can Ruin Results, and What Can Be Done about It.”</span> <em>Chemosphere</em>, Environmental <span>Chemistry</span>, 65 (11): 2434–39. <a href="https://doi.org/10.1016/j.chemosphere.2006.04.051">https://doi.org/10.1016/j.chemosphere.2006.04.051</a>.
+Helsel, Dennis R. 2006. <span>“Fabricating Data: How Substituting Values for Nondetects Can Ruin Results, and What Can Be Done about It.”</span> <em>Chemosphere</em>, Environmental <span>Chemistry</span>, 65 (11): 2434–39. doi:<a href="https://doi.org/10.1016/j.chemosphere.2006.04.051">10.1016/j.chemosphere.2006.04.051</a>.
 </div>
 <div id="ref-senn2012ghosts" class="csl-entry">
-Senn, Stephen, Nick Holford, and Hans Hockey. 2012. <span>“The Ghosts of Departed Quantities: Approaches to Dealing with Observations Below the Limit of Quantitation.”</span> <em>Statistics in Medicine</em> 31 (30): 4280–95. <a href="https://doi.org/10.1002/sim.5515">https://doi.org/10.1002/sim.5515</a>.
+Senn, Stephen, Nick Holford, and Hans Hockey. 2012. <span>“The Ghosts of Departed Quantities: Approaches to Dealing with Observations Below the Limit of Quantitation.”</span> <em>Statistics in Medicine</em> 31 (30). Wiley Online Library: 4280–95. <a href="https://doi.org/10.1002/sim.5515">https://doi.org/10.1002/sim.5515</a>.
 </div>
 </div></section><section id="footnotes" class="footnotes footnotes-end-of-document"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
 
@@ -21148,7 +21442,7 @@ Senn, Stephen, Nick Holford, and Hans Hockey. 2012. <span>“The Ghosts of Depar
 }
 </code></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-oosterwegel2025" class="csl-entry quarto-appendix-citeas">
 Oosterwegel, Max J. 2025. <span>“A Guide to Fitting Left-Censored Models
-with R.”</span> April 21, 2025. <a href="https://doi.org/placeholder">https://doi.org/placeholder</a>.
+with R.”</span> April 21. doi:<a href="https://doi.org/placeholder">placeholder</a>.
 </div></div></section></div> ]]></description>
   <guid>https://maxoosterwegel.com/blog/left-censored-models-showcase/</guid>
   <pubDate>Sun, 20 Apr 2025 22:00:00 GMT</pubDate>

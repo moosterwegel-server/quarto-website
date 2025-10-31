@@ -54,6 +54,7 @@ website:
 format:
   html:
     theme: [custom.scss, cosmo]
+    csl: chicago_author_date_et_al.csl
     highlight-style: monokai
     linkcolor: black
     lang: en

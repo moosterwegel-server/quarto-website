@@ -1,0 +1,174 @@
+---
+title: "Can we use mendelian randomization to learn about the causal effects of chemical exposures on our health?"
+date: "2025-10-31"
+format: 
+  html: 
+      echo: true
+      message: false
+      warning: false
+      code-fold: true
+      fig-height: 3
+execute: 
+  cache: true
+citation: true
+bibliography: references.bib
+nocite: | 
+  @*
+---
+
+With the expected continued scaling of high-throughput mass spectrometry, many participants of cohort studies will not only have genetic information available, but also have exposure-related information. Can we use high-throughput exposure data to apply mendelian randomization (MR) for environmental chemicals? In this blog post I briefly go over MR, the assumptions most relevant to chemical exposures, and what exposure information can add.
+
+::: {=html}
+<script type="text/javascript" src="/js/prototype.js"></script>
+<script type="text/javascript" src="/js/dagitty-3.0.js"></script>
+
+<pre class="dagitty" style="height: 140px;">
+dag {
+bb="0,0,1,1"
+G [pos="0.1,0.6"]
+U [pos="0.6,0.3"]
+X [exposure,pos="0.4,0.6"]
+Y [outcome,pos="0.8,0.6"]
+G -> X
+U -> X
+U -> Y
+X -> Y
+}
+</pre>
+
+<script type="text/javascript">
+  window.addEventListener("load", function() {
+    DAGitty.setup();
+  });
+</script>
+:::
+
+# MR
+MR uses instrumental variables to estimate causal effects for exposures on health and other personal outcomes. More specifically, MR uses the fact that conditional on parental genotypes, alleles are randomly allocated from parents to offspring.[^1] If we can find alleles that are reliably related to our exposure of interest, we can -- under strict assumptions (Box 1) -- use the random assignment of this gene as an instrument to infer the causal effect of an exposure on an outcome.
+
+::: {.callout-note collapse="true"}
+# Box 1: MR assumptions
+
+## Assumptions classical IV
+1. Relevance: the genetic instrument (G) must be robustly associated with the exposure (X).
+2. Exchangeability (also known as independence): the genetic instrument (G) must not share any common causes (confounders) with the outcome (Y). 
+3. Exclusion restriction: the genetic instrument (G) must affect the outcome (Y) only through its effect on the exposure (X). Any pathway from the instrument to the outcome that bypasses the exposure (e.g., via horizontal pleiotropy, where one gene influences multiple traits) violates this assumption. 
+
+## Additional assumptions for estimation & interpretation of MR
+1. Gene-environment equivalency: hypothetically changing exposure through a change in genotype or a change in environment should produce the same effect on the outcome. Conceptually comparable to the consistency assumption in the standard causal inference literature.
+2. Homogeneity or monotonicity: no potential differences in the causal effect among individuals. Homogeneity assumes the exposure's effect on the outcome is uniform across the entire population. Monotonicity is a less strict assumption as it only requires that the genetic instrument's effect on the exposure goes in one direction (e.g., it increases the exposure for everyone it affects; it doesn't decrease it for some).
+
+Please see @sanderson_mendelian_2022 and @richmond_mendelian_2022 for details.
+:::
+
+[^1]: In non-familial studies (which are dominant in the literature due to data limitations) this is better described as 'approximate MR' (@davey_smith_mendelian_2003). And the (implicit) verdict seems to be that this is good enough, although it is at risk of potential biases from dynastic effects, population structure, and assortative mating (@davies_within_2019, @tudball_almost_2023, @smith_clustered_2007). 
+
+MR has proved its value for evidence synthesis in studies of high-density lipoprotein cholesterol (HDL-C) and coronary heart disease. In these studies, a range of genetic variants that affect the level of HDL-C were used to test whether HDL-C decreases the risk of coronary heart disease.[^15] Many of the exposures we study in environmental epidemiology, however, are a different kind of exposure than HDL-C: the body does not produce these exposures; genetic variation can only influence how the body handles the exposure upon entry. Can we still use MR with such exposures? 
+
+[^15]: This showed a null association and in general, MR has been most useful to show null effects whereas classical observational studies showed consistent (confounded) effect sizes.
+
+Yes, this difference is not relevant to MR as researchers have famously used the variation in two genes involved in alcohol metabolism -- ALDH2 and ADH1B -- to instrument the effect of alcohol consumption on cardiovascular diseases. Variation in these genes reduces consumption (by causing an unpleasant physical reaction to alcohol) and as such there is a clear gene-environment equivalency[^2]. This means that hypothetically changing exposure through a change in genotype or a change in environment should produce the same effect on the outcome. Such exact mimicking may be less clear for many other environmental exposures as there is no genetic variant for _using_ (or being _externally_ exposed to) environmental chemicals such as PFAS.[^3] This may complicate their causal effect interpretation, but that does not mean all is lost: we can still use MR to generate (qualitative) evidence by performing tests instead of estimating effects.[^4] 
+
+[^3]: GD Smith referred to many studies that carry out MR for GWAS hits for such exposures without gene-environment equivalency as ‘[noodles'](https://www.youtube.com/watch?v=jQmlba_B_lg) : they will find genetic correlates of noodle eating but this does not instrument a specific taste for noodles that causes them to eat more noodles. You’re just looking at upstream factors instead. (Related GD Smith presentation in better quality available [here](https://www.youtube.com/watch?v=NTZ0imjoH2w))
+
+[^4]: These tests can be seen as an analogue to intent-to-treat analysis in RCTs. 
+[^2]: Another instance of a violation of gene-environment equivalence is canalization where the body develops compensatory pathways to mitigate the effects of genetic or environmental variations during development. For example, an individual with a genetic predisposition to high levels of a particular substance from birth might develop resistance to its effects, which would not be the case for someone whose levels of that substance increase later in life due to environmental factors. Whether canalization occurs widely is unknown (@kodali_effects_2018). 
+
+And this has also been done numerous times for our chemical exposures of interest. For example, @cherry_paraoxonase_2002 found that the paraoxonase (PON1) enzyme hydrolyses diazinonoxon – a potentially toxic component found in an organophosphate used in sheep dip. Importantly, they also found a genetic variant associated with PON1 and thus lower detoxification. This variant could then serve as proxy for _internal_ exposure to sheep dip and help us investigate the causal effect of sheep dip on health. Similarly, researchers have used genetic variation in the NAT2 gene that is involved in the detoxification pathway of carcinogens to triangulate the evidence of smoking on bladder cancer (@garcia-closas_nat2_nodate), and two SNPs impacting arsenic metabolism efficiency were used to test the causal effect of arsenic exposure on skin lesions (@pierce_arsenic_2013). 
+
+# Gene-environment interactions
+The papers on sheep dip and smoking did not mention MR. If placed in a general framework, it’s usually gene-environment interaction, not MR. However, we can think of many of these genetic instruments in MR as a gene-environment interaction.[^7] Ideally, this would be a gene-environment interaction without an independent gene effect. In other words, the association of the gene with the outcome is only visible in the presence of the exposure. These gene-environment interactions affect metabolism of exposure[^8] by affecting absorption, distribution, metabolism, and excretion (ADME) characteristics of the targeted exposure (@ritz_lessons_2017). Thereby, they affect the susceptibility of an individual and can serve as a proxy for internal exposure to the environmental exposure of interest which -- in exposure assessment and epidemiology -- is ultimately what we care about. 
+
+[^7]: As @vanderweele_methodological_2014 notes, gene-environment interactions depend on the definition of exposure. For example, the genes used to study bladder cancer cause you to extract more toxins per cigarette and as such amplify the effect of each cigarette smoked. If we define the exposure as pack-years there is a gene-environment interaction. However, if we define the exposure as all aspects of smoking behavior including the metabolism of toxins there is not a gene-environment interaction. Note also how the paper on arsenic talks about arsenic metabolism instead of arsenic. 
+
+[^8]: Other terms I encountered in the literature that describe the same or closely related phenomena (or which are useful terms for finding related literature): environmental response machinery, environmental response/sensitive genes, reduced detoxification, slow-metabolizer variants, poor/extensive metabolizer, toxicogenetics, precision environmental medicine. 
+
+::: {.callout-note collapse="true"}
+# Box 2: Metabolism of environmental chemicals
+
+The body's strategy for "handling" an environmental chemical (a xenobiotic) depends on its chemical nature. Substances that are already water-soluble, such as many metals, generally rely on rapid transport and excretion through the kidneys or intestinal tract. Environmental chemicals such as PCBs and PAHs are fat-soluble, however, allowing them to pass through cell membranes and bioaccumulate in fatty/lipid-rich tissues. Because they aren't water-soluble, they cannot be easily excreted by the kidneys. In a three-phase process they are made water-soluble that allows excretion:
+
+1. Phase I (modification): enzymes, most famously the Cytochrome P450 (CYP450) superfamily (abundant in the liver), perform oxidation to add a reactive group. However, this initial modification can sometimes activate the xenobiotic, converting it into a reactive electrophile or free radical that is more toxic than the original compound.
+2. Phase II (conjugation): enzymes like NAT2 or GST attach a large water-soluble "tag" (e.g., glutathione) to the reactive group, neutralizing it. 
+3. Phase III (transport -- not always included in classical model, but polymorphisms in transporters may also contribute to differences in metabolism): transporters (like on the cell's surface) then actively pump this new, large, water-soluble metabolite out of the cell and into the bile or blood, where it can be eliminated by the kidneys. 
+
+Water-soluble substances, like many heavy metals and metalloids (e.g., arsenic) -- which are inducers of oxidative stress and cellular damage -- don't need Phase I to dissolve, but they still need to be detoxified and actively transported. They often use the Phase II (conjugation) and Phase III (transport) mechanisms directly. For example, arsenic is made less toxic and is "tagged" for excretion by adding methyl groups (a Phase II conjugation reaction).
+
+This three-phase system (for fat-soluble chemicals) is part of a broader environmental response machinery. @motsinger-reif_gene-environment_2024, table 3 highlights other gene classes that respond to the presence of environmental chemicals or the damage they cause. These damage-response pathways are highly relevant for all environmental exposures -- both the fat-soluble chemicals and water-soluble substances like heavy metals. 
+
+:::
+
+When we only want to test for and not estimate an effect though, we do not even need exposure information![^9] We only need genetic variant and outcome data to implicate specific exposures in the etiology of a disease. In fact, this was what Katan proposed in his early writing on MR (e.g. @katan_apolipoprotein_1986) where he described an approach that examined the association between genetic variants and the outcome to test for an effect of the exposure on the outcome. This is precisely what @carol_ann_gross-davis_role_2015 did. Namely, they conducted a case-control study of myeloproliferative neoplasms (MPNs) where they genotyped cases and controls for variants in ‘environmentally sensitive genes’. They found that certain genotypes, such as the NAT2 slow acetylator genotype and variants in CYP1A2, GSTA1, and GSTM3, were associated with a 3--5-fold increased risk of MPNs. Based on these "gene-only" associations, they concluded that the environmental exposures whose toxicity is modified by these specific genes, like aromatic compounds, may play a role in the etiology of MPNs. 
+
+[^9]: @vanderweele_methodological_2014 also mention that an additional advantage of testing (instead of estimating) is that you do not need to fully specify what the exposure exactly is; the IV assumptions just need to hold under some definition of the exposure.
+
+However, importantly, they could not implicate a specific chemical, because the chemicals they studied share metabolism. In MR terms we would say that there is horizontal pleiotropy[^10] where the variant affects the outcome through other variables than a specific, single exposure (see below for an illustration). In general, this is a big hurdle for MR for environmental chemicals. 
+
+[^10]: In IV terms this is the exclusion restriction.
+
+::: {=html}
+<script type="text/javascript" src="/js/prototype.js"></script>
+<script type="text/javascript" src="/js/dagitty-3.0.js"></script>
+
+<pre class="dagitty" style="height: 140px;">
+dag {
+bb="0,0,1,1"
+"metabolism of 2,4'-DDT" [pos="0.400,0.175"]
+"metabolism of Tetradioxin" [exposure,pos="0.400,0.600"]
+CYP1A1 [pos="0.100,0.600"]
+Y [outcome,pos="0.800,0.600"]
+"metabolism of 2,4'-DDT" -> Y
+"metabolism of Tetradioxin" -> Y
+CYP1A1 -> "metabolism of 2,4'-DDT"
+CYP1A1 -> "metabolism of Tetradioxin"
+}
+
+
+</pre>
+
+<script type="text/javascript">
+  window.addEventListener("load", function() {
+    DAGitty.setup();
+  });
+</script>
+:::
+
+
+Nevertheless, I think such approaches can play a role in evidence synthesis of environmental chemicals: the sources of bias are generally different from the more common epidemiological studies and as such they could be used in triangulation. Put differently, the confounding effect of the metabolizing gene will likely be different than if we were to directly study the environmental exposure. Moreover, sometimes it just takes a while to find suitable instruments[^25]. For example, it took years to find a likely valid instrument for circulating vitamin C levels (@smith_mendelian_2010). Although it's important to note that functional polymorphisms may not exist in many cases (@weiss_how_2000).
+
+[^25]: Not discussed in detail in this post, but suitable instruments also implies that they are strong enough. Instruments that are only weakly associated with the exposure are known as "weak instruments" and can suffer from low power and introduce significant bias. This bias pulls the estimate toward the confounded observational association in one-sample MR and toward the null in two-sample MR. See e.g. @sanderson_mendelian_2022 and @richmond_mendelian_2022 for more information.
+
+::: {.callout-note collapse="true"}
+# Box 3: Screening for associations with 'environmentally sensitive genes' in 2025
+
+The paper from @carol_ann_gross-davis_role_2015 is from a decade ago and it seems that the Environmental Genome Project (EGP) resource they used to retrieve 647 known environmentally sensitive genes has been (spiritually) succeeded by projects like the [Environmental Polymorphisms Registries (EPR)](https://ehp.niehs.nih.gov/doi/full/10.1289/ehp.1003348), [the Personalized Environment and Genes Studies (PEGS)](https://www.niehs.nih.gov/research/atniehs/labs/crb/studies/pegs), and the [Comparative Toxicogenomics Database](https://ctdbase.org/). The latter seems like an especially useful resource to retrieve genes involved in metabolism of an environmental chemical. It can also provide insight into polymorphisms by its grouping of all chemicals that have been associated with a gene in past (mostly in vitro) studies.
+:::
+
+# What exposure information can add
+So strictly speaking we do not even need measurement of exposures to do MR, but I think such measurements will nonetheless be useful in understanding the environmental response machinery as MR is most useful in evidence synthesis if the mechanism of association of the polymorphisms with the exposure (metabolism) is well-understood. Namely, biological knowledge is needed to know that the genes themselves do not cause disease, and if metabolism of other exposures is related to the gene or disease. Measurements of exposures can be useful in both cases: we can test for an association in the absence of exposure[^17], and we can of course use the exposure data to search for new candidate instruments, thereby generating useful biological information beyond the dominant in vitro studies used to select many environmentally sensitive candidate genes in the past.[^11] 
+
+[^17]: Absence of exposure can be very difficult with ubiquitous exposures such as PFAS though.
+
+Past studies that incorporated chemical exposure have used classical job exposure matrices (JEMs) (e.g. @quintero_santofimio_geneoccupational_2025) and existing studies could use high-throughput biomarkers. Of note here is the difference in measurement error structure between these exposure assessment methods: biomarkers typically have a classical error structure that dilutes effects towards the null and reduces statistical power, whereas JEMs -- that assess exposure at the group level -- mostly involve Berkson's error, which does (in the general case) not bias estimates but instead reduces their precision. These differences could have implications for the design and merit of these studies for evidence synthesis.
+
+[^11]: Directly modeling the gene-environment interaction seems attractive when you have both exposure, disease, and gene data available. But @burstyn_virtues_2009 note that deliberately mis-specifying your gene-environment interaction model by using a "gene-only" model can be beneficial if we can assume the gene only affects disease risk in exposed subjects and exposure measurements are assessed with error.
+
+::: {.callout-note collapse="true"}
+# Box 4: Not all biomarkers are the same: choosing the right biomarker
+
+With biomarkers, it's worth distinguishing what type is used. Here, I want to briefly distinguish between the utility of the parent compound, the Phase I metabolite, or the Phase II metabolite for MR studies. 
+
+Using the parent compound in blood can provide a good proxy for the long-term, total-body burden of exposure. Measurement of a Phase I metabolite can be important as it sometimes is the more toxic, reactive form of the chemical, while measurement of a Phase II metabolite can help identify slow metabolizers as they would have lower levels of this final metabolite.
+
+However, as a proxy for genetic metabolic function these can all be noisy because they are influenced by external exposure levels which are, of course, independent of the gene's function. 
+
+Metabolic ratios (e.g. Phase II metabolite / Phase I metabolite) can help by normalizing for these differences in external exposure and as such can be more suitable for searching for genetic instruments. The @pierce_arsenic_2013 study on arsenic is one example of this, where they calculate a ratio as a measure of an individual's methylation capacity. 
+
+I should note, though, that ratios in the presence of measurement error can bring some additional statistical challenges. 
+
+:::
+
+# Conclusion
+Gene-environment interactions for chemicals seem to mostly get attention with respect to targeted prevention by identifying susceptible individuals. I think it would be worthwhile to also increase their use in qualitative testing because their sources of bias will be different from more common epidemiological study designs and as such they will be useful for the synthesis of evidence.[^12] The MR framework then provides us with useful guidance to critically inspect these tests which is key with, for example, the challenging pleiotropy of environmental chemicals. Increased availability of exposure data can assist in the biological knowledge underpinnings of MR though measurement error will make this less trivial than we had perhaps hoped.
+
+[^12]: If I had to counter my own position I would say that the need for this is limited because in the study of chemical exposures, by environmental and occupational epidemiology, confounding (i.e. what MR overcomes) is much less of a problem than in other parts of epidemiology. Namely, we often assess exposures at the group-level and the relationship of these group-level measurements to individual confounders is often very limited (see @weisskopf_trade-offs_2017 for example). The great challenge is instead assessing exposure. @weisskopf_trade-offs_2017 also describe a very cool general (non-genetic) instrumental variable in environmental epidemiology as the group-level exposure assessments can be seen as an instrumental variable for personal-level exposure measurements. 
