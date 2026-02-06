@@ -79,14 +79,14 @@ Proteomics, importantly, does not measure this as it measures protein levels ins
 # Challenges 
 Now to systematically investigate the relationship of these ratios (using measurements from untargeted platforms) to health, genes and the like, I identified several possible challenges:
 
-## Fundamental Statistical challenges
+## Fundamental statistical challenges
 The use of ratios in regression raises fundamental statistical questions. This discussion goes back to @pearson_mathematical_1897 when he noted that uncorrelated variables become correlated when they share a common denominator. More recent discussions (e.g @allison_statistical_1995, @kronmal_spurious_1993, @mccaw_pitfalls_2025) highlight that a regression result need not be specific to the ratio per se as a mixture of signals associated with the numerator or denominator can give rise to an association with a ratio. Therefore, some recommend to always place your ratio results into the context of the marginal models (i.e. numerator or denominator only -- (@mccaw_pitfalls_2025)), or to calculate some 'p-gain' statistic (@petersen_hypothesis-free_2012).[^2] Relatedly, such a mixture of signal problem complicates causal inference concepts such as the consistency assumption (@mooldijk_ratios_2025).
 
 Moreover, statisticians point to the strong parametric assumptions that a ratio makes as a ratio is implicitly an interaction between one variable and the reciprocal of another variable. This is often done without modeling the main effects -- implicitly assuming that these do not affect the outcome. 
 
 [^2]: Recently there was [some discussion](https://bsky.app/profile/richarddmorey.bsky.social/post/3lvvwjwc3jl2b) over a statistical technique in metascience that was developed without deep involvement from experts in statistics. Now, the p-gain statistic seems quite simple and some vetting (i.e. @petersen_hypothesis-free_2012) has been done so there is probably not much wrong with it, but the discussion has left me more suspicious about such techniques.. 
 
-## Metabolite specific challenges
+## Metabolite specific statistical challenges
 ### Explosion of tests 
 If our platform provides us with information on the intensity of 400 molecules and we want to study all the ratios this amounts to 79800 tests ($\frac{n(n-1)}{2}$). That's a lot! And while that is not necessarily a [statistical problem](/blog/fdr-heuristics/index.qmd)[^70], I suspect that -- based on the previous section -- we can come up with general, promising classes of ratios to prioritize. For example, known substrate-product pairs from high confidence reactions, and all pairwise ratios within a pathway, or of a pro-inflammatory product to its precursor, are much more promising than the ratio of metabolites that are not known to be connected by an edge in a network. For xenobiotics, prioritising beyond oxidized/non-oxidized forms, becomes challenging as xenobiotics lack pathway structure. We could  calculate all ratios to still allow for the study of ADME and toxicokinetic processes. Depending on the exact research question, we can perform a series of univariable tests and control for multiple testing (separately by each of these categories), or we can perform variable selection using a computationally efficient statistical procedure of lasso for ratios as proposed by @bates_log-ratio_2019. 
 
