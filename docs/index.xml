@@ -12,7 +12,7 @@
 <generator>quarto-1.7.27</generator>
 <lastBuildDate>Sun, 25 Jan 2026 23:00:00 GMT</lastBuildDate>
 <item>
-  <title>Using the ratio of metabolites in epidemiological studies</title>
+  <title>Reflections on metabolite ratios</title>
   <dc:creator>Max J. Oosterwegel</dc:creator>
   <link>https://maxoosterwegel.com/blog/metabolite-ratios/</link>
   <description><![CDATA[ 
@@ -24,7 +24,7 @@
 <section id="what-can-ratios-capture" class="level1">
 <h1>What can ratios capture?</h1>
 <p>To understand why we concern ourselves with the added statistical complexities of ratios, one must first appreciate the (theoretical) utility of the metabolite ratios. Namely, levels of metabolites are not static as they are always in flux and these dynamics are governed by enzymatic kinetics. Single metabolite analyses do not capture these dynamics. In some scenarios, this limitation does not pose a problem. For example, if the molecule serves as a marker of exogenous exposure (e.g.&nbsp;cotinine and nicotine levels reflecting smoking), or when absolute concentration itself drives toxicity (e.g.&nbsp;uric acid crystals in gout), the absolute level of the metabolite will likely suffice to study their relationship with health. But sometimes the actual biology can be better captured by the production and clearance <em>rates</em> of the metabolite. Because in a homeostatic system like the human body, the absolute level can be misleading as compensatory mechanisms may maintain the levels despite dysfunction in the pathway. In other words, if you only take the absolute levels into account in a homeostatic system, you can miss the ‘effort’ it took to keep it there.</p>
-<p>While we cannot measure these rates comprehensively in our epidemiological single sample studies, we think we can get a useful proxy of such processes by looking at the ratio of metabolites. For example, the ratio of phenylalanine to its hydroxylated product, tyrosine, can serve as a direct proxy for the activity of the enzyme phenylalanine hydroxylase. A ratio can, in theory, also normalize for a low input as sometimes low levels may simply reflect low dietary intake rather than metabolic dysfunction. Or, if one of the small molecules is a xenobiotic, we obtain proxies for the detoxification capacity (e.g.&nbsp;modification, conjugation, and transport).</p>
+<p>While we cannot measure these rates comprehensively in our epidemiological single sample studies, we think we can get a useful proxy of such processes by looking at the ratio of metabolites. For example, the ratio of phenylalanine to its hydroxylated product, tyrosine, can serve as a direct proxy for the activity of the enzyme phenylalanine hydroxylase. A ratio can, in theory, also normalize for a low input as sometimes low levels may simply reflect low dietary intake rather than metabolic dysfunction. Or, if one of the small molecules is a xenobiotic, we obtain proxies for the detoxification capacity (e.g.&nbsp;absorption, distribution, metabolism, excretion).</p>
 <div id="cell-product-substrate-example" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
@@ -274,7 +274,7 @@ font-style: inherit;">0.1</span>)</span>
 </div>
 <p>More generally these ratios of product to substrate may capture the binding affinity or reaction rate (<span class="citation" data-cites="mccaw_pitfalls_2025">McCaw et al. (2025)</span>). Beyond direct neighbours in a pathway, ratios of metabolites within the same pathway can serve as indicators of overall pathway efficiency or reveal ‘traffic jams’ where specific bottlenecks serve as rate-limiting steps.</p>
 <p>Ratios of metabolites across different pathways seem harder to conceptualize – and cross-talk between pathways means the boundaries are not always clear. Still, these ratios could capture systemic coordination such as the competition for shared cofactors (like ATP or NADH) or reflect the global balance between building up (anabolism) and breaking down (catabolism) processes in the body.</p>
-<p>Fundamentally, these ratios may proxy for flux distribution, approximating the movement of molecules through the system. By translating a static chemical snapshot into a (albeit crude) measure of dynamic biological efficiency, they help us look beyond merely which molecules are present at what quantities to understanding how effectively they are being transported / flow through the system (<span class="citation" data-cites="fearnley_metabolomics_2016">Fearnley and Inouye (2016)</span>).<sup>1</sup></p>
+<p>Fundamentally, these ratios may proxy for flux distribution, approximating the movement of molecules through the system. They can help us translate a static chemical snapshot into a (albeit crude) measure of dynamic biological efficiency (<span class="citation" data-cites="fearnley_metabolomics_2016">Fearnley and Inouye (2016)</span>).<sup>1</sup></p>
 <p>Proteomics, importantly, does not measure this as it measures protein levels instead of the proxy of enzyme activity we try to obtain here.</p>
 </section>
 <section id="challenges" class="level1">
@@ -313,7 +313,7 @@ font-style: inherit;">0.1</span>)</span>
 <section id="isomers" class="level2">
 <h2 class="anchored" data-anchor-id="isomers">Isomers</h2>
 <p>Isomers are compounds that share the same chemical formula (and mass) but differ in structural arrangement. Because untargeted mass spectrometry detects mass, it cannot distinguish between these molecules unless they are physically separated before detection. This is typically achieved by coupling the spectrometer to a (liquid) chromatograph. However, separation fails when isomers share similar physicochemical properties such as polarity and hydrophobicity. In these cases, the molecules interact with the column in nearly identical ways, causing them to elute at the same time (co-elution).</p>
-<p>Structural arrangement can have profound implications for biological function: leucine and isoleucine – despite identical mass – play distinct roles in protein synthesis and metabolic regulation; glucose and fructose trigger different insulin responses and metabolic pathways. When these classic examples co-elute, the measured signal reflects the sum of both compounds. While problematic for single metabolite analyses, this aggregation is also damaging for ratios; a ratio involving a co-eluted isomer is no longer a clean readout of a specific enzyme’s efficiency. Instead, it becomes a muddied variable, reflecting not just the biological process of interest, but also the relative abundance of the interfering isomer and as such probably not reflecting anything biological.</p>
+<p>Structural arrangement can have important implications for biological function: leucine and isoleucine – despite identical mass – play distinct roles in protein synthesis and metabolic regulation as glucose and fructose trigger different insulin responses and metabolic pathways. When these classic examples co-elute, the measured signal reflects the sum of both compounds. While problematic for single metabolite analyses, this aggregation is also damaging for ratios: a ratio involving a co-eluted isomer is now a muddied variable instead of a clean readout of a specific enzyme’s efficiency. As such, it reflects the ratio probably does not reflect anything biological.</p>
 <p>Even popular targeted kits are not immune to this problem. For example, the Biocrates AbsoluteIDQ p180 kit does not allow for detailed analysis of the exact lipid composition of metabolites such as PC ae C32:2. In this case, distinct lipid species with different biological roles are aggregated into a sum, making specific product-to-substrate inferences risky as interpretation carries considerable uncertainty. While future technologies like Ion Mobility Spectrometry (IMS) may offer better separation, current chatter suggests they are not a panacea.</p>
 </section>
 </section>
@@ -327,8 +327,8 @@ font-style: inherit;">0.1</span>)</span>
 <section id="epilogue" class="level1">
 <h1>Epilogue</h1>
 <p>Beyond direct results, what can we learn from this literature, particularly the recent preprint by <span class="citation" data-cites="sadegh_rizi_comprehensive_2025">Sadegh Rizi et al. (2025)</span>? A few things stand out.</p>
-<p>First, these ratios do really seem to capture enzyme activity. Second, many significant ratio-gene associations involve metabolites that aren’t known substrate-product pairs or even direct pathway neighbors – suggesting that my biologically informed prioritization alone would have missed a lot. Even with their stringent statistical thresholds, the sheer number of results hints at more signal than I initially expected. This makes me very excited for the future as more metabolomic data paired with genetic data becomes available in cohorts.</p>
-<p>Third, the authors excluded isomers, which validates a challenge I’d flagged earlier. Fourth, the underlying summary statistics came from a study that didn’t specifically optimize preprocessing for ratio analysis. In my own metabolomic work, I’ve seen how (largely) ignoring (the intertwined nature of) technical variation and left-censoring can create artifacts, and I’d expect ratios to be even more sensitive to these choices.</p>
+<p>First, these ratios do really seem to capture enzyme activity. Second, many significant ratio-gene associations involve metabolites that aren’t known substrate-product pairs or even direct pathway neighbors – suggesting that my biologically informed prioritization alone would have missed a lot. Even with their stringent statistical thresholds, the sheer number of results hints at more signal than I initially expected. This makes me very excited for the future as more metabolomic data paired with genetic data becomes increasingly available in cohorts.</p>
+<p>Third, the authors excluded isomers, which validates a challenge I’d identified earlier. Fourth, the underlying summary statistics came from a study that didn’t specifically optimize preprocessing for ratio analysis. In my own metabolomic work, I’ve seen how (largely) ignoring (the intertwined nature of) technical variation and left-censoring can create artifacts, and I’d expect ratios to be even more sensitive to these choices.</p>
 <p>That said, some associations have replicated across studies with seemingly different preprocessing strategies. For instance, the negative effect of the C allele at rs1260326 on the glucose/mannose ratio shows up in <span class="citation" data-cites="chen_genomic_2023">Chen et al. (2023)</span>, <span class="citation" data-cites="suhre_human_2011">Suhre et al. (2011)</span>, and <span class="citation" data-cites="shin_atlas_2014">Shin et al. (2014)</span>. Maybe preprocessing matters less than I think – at least for larger effects. Or maybe it only matters on the margin. Time will hopefully tell.</p>
 
 
@@ -408,15 +408,15 @@ Suhre, Karsten, Johannes Raffler, and Gabi Kastenmüller. 2016. <span>“Biochem
 </ol>
 </section><section class="quarto-appendix-contents" id="quarto-citation"><h2 class="anchored quarto-appendix-heading">Citation</h2><div><div class="quarto-appendix-secondary-label">BibTeX citation:</div><pre class="sourceCode code-with-copy quarto-appendix-bibtex"><code class="sourceCode bibtex">@online{oosterwegel2026,
   author = {Oosterwegel, Max J.},
-  title = {Using the Ratio of Metabolites in Epidemiological Studies},
+  title = {Reflections on Metabolite Ratios},
   date = {2026-01-26},
   url = {https://maxoosterwegel.com/blog/metabolite-ratios/},
   doi = {placeholder},
   langid = {en}
 }
 </code></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-oosterwegel2026" class="csl-entry quarto-appendix-citeas">
-Oosterwegel, Max J. 2026. <span>“Using the Ratio of Metabolites in
-Epidemiological Studies.”</span> January 26. doi:<a href="https://doi.org/placeholder">placeholder</a>.
+Oosterwegel, Max J. 2026. <span>“Reflections on Metabolite
+Ratios.”</span> January 26. doi:<a href="https://doi.org/placeholder">placeholder</a>.
 </div></div></section></div> ]]></description>
   <guid>https://maxoosterwegel.com/blog/metabolite-ratios/</guid>
   <pubDate>Sun, 25 Jan 2026 23:00:00 GMT</pubDate>
