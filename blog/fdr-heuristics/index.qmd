@@ -154,9 +154,10 @@ unified_layout = {
   const container = d3.create("div")
     .style("width", "100%")
     .style("background-color", "#f9f9f9")
-    .style("border-radius", "20px")
-    .style("padding-top", "20px")
-    .style("margin-bottom", "10px")
+    .style("border", "1px solid #dee2e6")
+    .style("border-radius", "15px")
+    .style("padding", "20px")
+    .style("margin-bottom", "10px");
 
   function createSlider(config) {
     const sliderContainer = d3.create("div")
