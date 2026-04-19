@@ -250,7 +250,7 @@ for(i in 1:nr_imputations) {
 r <- tibble::as_tibble(imputed_sets)
 ```
 
-Below we see that the model has indeed recovered the parameters of the data generating process. The imputations below the LOD are based on these recovered parameters. 
+Below we see that the model has indeed recovered the parameters of the data generating process, and that convergence diagnostics ($\hat{R}$, Bulk ESS, and Tail ESS) fell within acceptable ranges, suggesting reliable posterior estimates.[^10] The imputations below the LOD are based on these recovered parameters. 
 ```{r}
 #| warning: false
 summary(m)
@@ -258,6 +258,8 @@ summary(m)
 Visually, we can plot one of the imputed sets, and see that it fits well with the ideal data distribution that has the technical variation removed and the nondetects imputed. We imputed multiple times to represent and capture the uncertainty around the exact value of the nondetects[^3]. We can also see that some of the observed values are now under the the original limit of detection. This is because -- according to our model -- these observations would have been nondetects in a 'usual' batch. And vice versa, there are some nondetects that would have been observed in a 'usual' batch and are now above the original LOD. 
 
 [^3]: In discussions I get the sense that many people think that the goal of imputation in metabolomics is to get as close as possible to the value that we would have observed with unlimited instrument sensitivity. While that's welcome, for valid downstream inference with censored data it's more important to accurately represent the uncertainty associated with those unobserved values. 
+
+[^10]: Depending on the textbook, an $\hat{R}$ smaller than 1.01 or 1.05 is seen as acceptable. For Effective Sample Size (ESS), the recommendation is at least 100 independent draws per MCMC chain (e.g., a total ESS $>400$ if running the standard 4 chains). In short: $\hat{R}$ checks if your different chains mixed well and are in agreement with each other. Bulk ESS tells you if you have enough independent draws to trust the center (mean/median) of your estimates, and Tail ESS confirms you have enough draws to confidently report the extremes (like your 95% credible intervals). Always important to check these (or at least sample some models if you fit many). Standard frequentist frameworks don't offer these kinds of rich, built-in warnings about whether your parameter estimation actually worked, so it would be a shame to ignore them when you have them!
 
 ```{r}
 #| warning: false
@@ -270,7 +272,7 @@ p_a <- df_imputes |>
   scale_color_manual(values = unname(bluebrown_colors_list)) +
   geom_point(aes(color = batch_id)) + 
   geom_point(data = subset(df_imputes, censored), 
-           aes(x = inj_order, y = V2), shape = 5) +
+             aes(x = inj_order, y = V2), shape = 5) +
   labs(x = x_lab, y = y_lab) +
   batch_lod_hline(df_imputes, nr_batches, samples_p_batch,
                   linewidth = linewidth, linetype = 'dashed') +
@@ -323,19 +325,166 @@ df_imputes|>
   theme(axis.title.y = element_blank(), 
         axis.text.y = element_blank(), axis.ticks.y = element_blank())
 ```
-# Challenges and solutions
+# Challenges and solutions (and a two-step model as compromise)
 In this exact approach to imputation and technical variation, your imputation and technical variation adjustment needs to be bespoke; you cannot do this imputation and 'denoising' once for your dataset and be done with it (if you care to this degree about bias). In theory, you could build the richest possible imputation model (and thus technical variation removal model) that is congenial with the most complex analysis that you would like to do and be done with it. In practice, this would be impossible for labs because they do not have (all) the covariate data, and it would be hard to do for data recipients with the amount of times a dataset is reanalysed by different analysts and the near certainty of missing values for the other variables in a rich imputation model[^4]. It will be even harder to create a congenial dataset when a mixture is the topic of interest and the dataset contains many left-censored features because you would need to impute in two variables simultaneously and it's not trivial to fit a multivariate left-censored model[^5].
 
 [^4]: Although `brms` seems to [accommodate](https://cran.r-project.org/web/packages/brms/vignettes/brms_missings.html) this as well. This extension is left as an exercise to the reader.
 
 [^5]: I think some kind of Gibbs sampler or some chained equation is the best we can do. Update: see [this blog post](/blog/bivariate-censoring/index.html) on how to do this.
 
-One potential way around this intertwined nature may be using the pooled QC samples for the batch adjustment using some kind of LOESS fit across the injection order. However, (1) labs do not always deliver information on QCs (2) there are less QA samples than study samples and as such there's less data to inform such a model (3) readily available LOESS models do not take left-censoring into account. More importantly, it also wouldn't incorporate other covariates in the adjustment process which risks removing real biological variation and potentially failing to capture that -- for example -- cases are more often censored. Such a LOESS approach also still separates batch correction from the imputation of study samples, failing to address this interdependence between batch-specific LODs and the imputation process itself.
+One potential way around this intertwined nature may be using the pooled QC samples for the batch adjustment using some kind of LOESS fit across the injection order. However, (1) labs do not always deliver information on QCs (2) there are less QC samples than study samples and as such there's less data to inform such a model (3) readily available LOESS models do not take left-censoring into account. More importantly, it also wouldn't incorporate other covariates in the adjustment process which risks removing real biological variation and potentially failing to capture that -- for example -- cases are more often censored. Such a LOESS approach also still separates batch correction from the imputation of study samples, failing to address this interdependence between batch-specific LODs and the imputation process itself.
 
-Another way around this -- that is potentially attractive to labs if they also want to provide a batch adjusted dataset -- is to slightly change our approach. We still take the intertwined nature of nondetects and batch effects into account by fitting the same statistical model. But contrary to what I described before, we do not impute. We only remove the technical variation by subtracting the technical variation terms from the observed data. We leave the imputation to the analyst. That part will still be bespoke. But the analyst can now just focus on creating a congenial imputation model like they have probably done before for more common epidemiological data. They do not need to worry about the technical variation[^6]. They only need a `mice` implementation of the left-censored imputation model from @lubin_2004 and they are ready to go! I think such a two-step approach is less elegant and maybe less statistically efficient but it meets a need of many labs and analysts and I think it's a marked improvement over what they usually do.
+Another way around this -- that is potentially attractive to labs if they also want to provide a batch adjusted dataset -- is to slightly change our approach. We still take the intertwined nature of nondetects and batch effects into account by fitting the same statistical model. But contrary to what I described before, we do not impute. We only remove the technical variation by subtracting the technical variation terms from the observed data. We leave the imputation to the analyst. That part can still be bespoke. But the analyst can now just focus on creating a congenial imputation model like they have probably done before for more common epidemiological data. They do not need to worry about the technical variation[^6]. They only need a `mice` implementation of the left-censored imputation model from @lubin_2004 and they are ready to go -- and crucially, within that familiar `mice` framework they can straightforwardly handle missingness in other covariates alongside the left-censored values. As with the LOESS approach discussed above, the lab will typically not have access to epidemiological covariates when performing this adjustment, meaning structured epidemiological variation risks being misattributed to technical sources and removed -- a problem that becomes particularly acute in more complex batch designs involving, for example, blocks or other structured imbalances across batches. I think such a two-step approach is less elegant (as uncertainty in e.g. technical variation is not propagated) and likely less statistically efficient, but it meets a need of many labs and analysts and I think it's a marked improvement over what they usually do.
+
+In code, this approach would look as follows:
 
 [^6]: Not many people worry about the technical variation anyhow -- but now there's also less _need_ to.
 
+```{r}
+re_draws <- brms::posterior_linpred(m, re_formula = NULL, draw_ids = samples_to_draw) - 
+  brms::posterior_linpred(m, re_formula = NA, draw_ids = samples_to_draw) 
+
+re_summary <- data.frame(
+  Estimate = apply(re_draws, 2, mean),
+  Est.Error = apply(re_draws, 2, sd),
+  Q2.5 = apply(re_draws, 2, quantile, probs = 0.025),
+  Q97.5 = apply(re_draws, 2, quantile, probs = 0.975)
+)
+
+df$mean_re_estimate <- re_summary$Estimate
+df$log_y_adjusted <- df$log_y_obs - df$mean_re_estimate
+```
+
+Just to illustrate the adjusted, non-imputed data we are moving forward with now:
+```{r}
+#| code-fold: true
+#| fig-height: 3.5
+p_c <- df |> 
+  ggplot(aes(inj_order, log_y_adjusted)) + 
+  scale_color_manual(values = unname(bluebrown_colors_list)) +
+  geom_point(aes(color = batch_id)) + 
+  geom_point(data = subset(df, censored), 
+             aes(x = inj_order, y = log_y_adjusted), shape = 5) +
+  labs(x = x_lab, y = y_lab) +
+  batch_lod_hline(df, nr_batches, samples_p_batch,
+                  linewidth = linewidth, linetype = 'dashed') +
+  ylim(c(min(df$log_y), max(df$log_y))) +
+  theme_minimal() +
+  theme(legend.position = 'none') 
+
+p_d <- df |> 
+  ggplot(aes(x = log_y_adjusted)) +
+  geom_histogram(bins = nr_bins, fill = 'black', alpha = 0.7, color = 'white') +
+  xlim(c(min(df$log_y), max(df$log_y))) +
+  ylim(c(0, axis_range_bins)) +
+  geom_vline(aes(xintercept = log_lod), linetype = 'dashed', linewidth = linewidth - 0.3) +
+  coord_flip() +
+  theme_void()
+
+p_c + p_d + plot_layout(ncol = 2, nrow = 1, widths = c(3, 1))
+```
+
+And then we can setup these functions to work with `mice`: 
+```{r}
+mice.impute.tobit <- function(y, ry, x, wy = NULL, lod = NULL, ...) {
+  # parent trick via 
+  # github.com/alexpkeil1/qgcomp/blob/2d0c995c0e5117f927ba775f6ee04901f678a7c7/R/base_extensions.R
+  whichvar <- eval(as.name("j"), parent.frame(n = 2))
+  nms <- names(eval(as.name("data"), parent.frame(n = 3)))
+  j <- which(nms == whichvar)
+  lod1 <- lod[[j]]
+  y1 <- y
+  y1[wy] <- lod1[wy]
+  
+  m <- survival::survreg(survival::Surv(y1, ry, type = 'left') ~ x, dist = "gaussian")
+  imputations <- draw_values_interval(mu = predict(m), sd = m$scale, -Inf, lod1)
+  imputations_1 <- imputations[wy]
+}
+
+# (past code imputation wrapped in function)
+# random sampling from a truncated normal variable via the cdf inversion method 
+# (also known as inverse transform sampling)
+draw_values_interval <- function(mu, sd, start, end) {
+  # what percentiles belong to start value with these params
+  unif_lower <- pnorm(start, mu, sd) 
+  # what percentiles belong to end value with these params
+  unif_upper <- pnorm(end,  mu, sd) 
+  # draw random percentiles between lower and upper
+  rand_perc_interval <- runif(length(mu),  unif_lower, unif_upper) 
+  # get value belonging to percentile
+  drawn_values <- qnorm(rand_perc_interval, mu, sd) 
+  return(drawn_values)
+}
+
+library(mice)
+
+# other variables with missings can readily be added here in the usual fashion
+run_mice <- function(df) {
+  df_mice  <- df |> dplyr::mutate(log_y = ifelse(censored, NA, log_y))
+  
+  dry_miced <- mice::mice(data = df_mice,
+                          method = c(rep("", 5), "tobit", ""),
+                          lod = c(rep("", 5), list(df_mice$lod), ""),
+                          debug = FALSE,
+                          print = FALSE,
+                          m = 10,
+                          maxit = 0, seed = 2025)
+  
+  dry_miced$predictorMatrix[] <- 0
+  dry_miced$predictorMatrix["log_y", "x"] <- 1
+
+  miced <- mice::mice(data = df_mice,
+                      method = c(rep("", 5), "tobit", ""),
+                      lod = c(rep("", 5), list(df_mice$lod), ""),
+                      predictorMatrix = dry_miced$predictorMatrix,
+                      debug = FALSE,
+                      print = FALSE,
+                      m = 10,
+                      maxit = 10, seed = 2025)
+}
+```
+
+And then call it as follows:
+```{r}
+lods <- df |> 
+  dplyr::group_by(batch_id, plate_id) |> 
+  dplyr::summarize(lod = min(log_y_adjusted))
+
+df_mice <- df |> 
+  dplyr::select(inj_order, batch_id, plate_id, censored, x, log_y = log_y_adjusted) |>
+  dplyr::left_join(lods)
+
+miced <- run_mice(df_mice)
+```
+
+And judging by these plots it has produced similar imputed data on the surface level: 
+```{r}
+#| code-fold: true
+miced_c <- complete(miced) |> tibble::as_tibble()
+p_e <- miced_c |> 
+  ggplot(aes(inj_order, log_y)) + 
+  scale_color_manual(values = unname(bluebrown_colors_list)) +
+  geom_point(aes(color = batch_id)) + 
+  geom_point(data = subset(miced_c, censored), 
+             aes(x = inj_order, y = log_y), shape = 5) +
+  labs(x = x_lab, y = y_lab) +
+  batch_lod_hline(df, nr_batches, samples_p_batch,
+                  linewidth = linewidth, linetype = 'dashed') +
+  ylim(c(min(df$log_y), max(df$log_y))) +
+  theme_minimal() +
+  theme(legend.position = 'none') 
+
+p_f <- miced_c |> 
+  ggplot(aes(x = log_y)) +
+  geom_histogram(bins = nr_bins, fill = 'black', alpha = 0.7, color = 'white') +
+  xlim(c(min(df$log_y), max(df$log_y))) +
+  ylim(c(0, axis_range_bins)) +
+  geom_vline(data = df, aes(xintercept = log_lod), linetype = 'dashed', linewidth = linewidth - 0.3) +
+  coord_flip() +
+  theme_void()
+
+p_e + p_f + plot_layout(ncol = 2, nrow = 1, widths = c(3, 1))
+```
 # Possible extensions
 Sometimes there's also drift within a plate or a technical variation beyond the batch/plate effects described here. One possible way to model this is by adding a random slope for injection order within a batch or plate. The code from above readily supports this because the code assumes all the random effects are nuisance variation. However, you may want to represent this drift in another way because I think that such more complicated models are much harder to fit. You can consider using some fixed effects[^7] and then remove their effect using some `model.matrix()` operation (to keep the effect of variables like e.g. case). 
 
@@ -345,7 +494,7 @@ One final point that I want to make on these models, is on the assumption of a m
 
 <!-- " the measured concentration can be thought of as a function of *duration of exposure* $\times$ *number of times exposed*. So differences in measured concentrations of the same compound (i.e. the variation) arise because of differences in one (or both) of the terms of this formula. And as we can see this formula is a *product* of factors, logarithms tend to work better when data arises from such a multiplicative process." -->
 
-[^7]: I'm not fully sure what's better (in such a setup): a model with random slopes that possibly doesn't fully converge or some 20 fixed effect interaction terms (with potentially some sparsity inducing horseshoe or LASSO priors). I guess putting (very) strong priors on the random slopes is the most logical option.
+[^7]: I'm not fully sure what's better (in such a setup): a model with random slopes that possibly doesn't fully converge or some 20 fixed effect interaction terms (with potentially some sparsity inducing horseshoe or LASSO priors). I guess putting (very) strong priors on the random slopes is the most logical option. An empirical Bayes method is also worth considering for this.
 
 ```{r}
 #| echo: false
