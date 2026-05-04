@@ -325,7 +325,7 @@ Second, once [absorbed]{.underline}, chemicals do not [distribute]{.underline} u
 
 Lastly, the model assumes elimination (which includes both [metabolism]{.underline} and [excretion]{.underline}) occurs at a fixed, predictable rate. However, this assumption can break down at high exposure levels when metabolic systems become saturated. Namely, biotransformation systems in the liver such as the Cytochrome P450 enzymes - which can either detoxify substances or convert them into more harmful metabolites - have a finite capacity that when exceeded, results in lower elimination rates. Such a state is better described by so called zero-order kinetics (Michaelis-Menten kinetics), where a constant amount is eliminated per unit time, regardless of how high the concentration gets. In the end, such a violation of our first-order kinetics assumption means that chemicals can persist longer in the body than predicted at very higher exposure/concentration levels by our model.
 
-And in reality, all of these 'parameters' can differ from person to person.. that may sound hopeless but in some cases this variation between people can enable better causal inferences on the health effects of chemicals through [mendelian randomization](/blog-mr-chemical-agents/index.html)!
+And in reality, all of these 'parameters' can differ from person to person.. that may sound hopeless but in some cases this variation between people can enable better causal inferences on the health effects of chemicals through [mendelian randomization](blog/mr-chemical-agents/index.html)!
 
 </details>
 
